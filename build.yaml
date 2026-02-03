@@ -1,0 +1,20 @@
+# Plugin metadata for catalog / release tooling (e.g. jellyfin-plugin-repo-action)
+# For the catalog tile: put icon in assets/icon.png, then set imageUrl to its raw URL (e.g. GitHub).
+name: JellyTrailers
+guid: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+version: 1.0.0
+targetAbi: 10.10.0
+framework: net8.0
+owner: JellyTrailers contributors
+overview: Download movie and TV show trailers with yt-dlp and place them next to your media.
+imageUrl: "https://raw.githubusercontent.com/fl4pj4ck/JellyTrailers/main/assets/icon.png"
+description: |
+  JellyTrailers runs inside Jellyfin and uses your server's movie/TV library roots.
+  It downloads missing trailers via yt-dlp (auto-downloaded if not installed), writes
+  trailer files next to each folder, and queues a library scan after each run.
+  Configure in Dashboard → Plugins → JellyTrailers; scheduled task runs daily by default.
+category: General
+changelog: |
+  1.0.0
+  - Initial release. Download trailers with yt-dlp; auto-download yt-dlp when path empty.
+  - Supports movie and TV libraries; configurable quality, delay, max per run.

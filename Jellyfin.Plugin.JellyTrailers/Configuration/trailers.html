@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JellyTrailers</title>
+    <style>
+        .trailers-card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            padding: 1.25rem;
+            margin-bottom: 1.5rem;
+        }
+        .trailers-card h3 {
+            margin: 0 0 1rem 0;
+            font-size: 1rem;
+            font-weight: 600;
+            color: rgba(255,255,255,0.9);
+            letter-spacing: 0.02em;
+        }
+        .trailers-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 0.75rem;
+        }
+        .trailers-stat-box {
+            background: rgba(0,0,0,0.25);
+            border-radius: 6px;
+            padding: 0.75rem 1rem;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.06);
+        }
+        .trailers-stat-box .label {
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.55);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 0.25rem;
+        }
+        .trailers-stat-box .value {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #fff;
+        }
+        .trailers-stat-box.success .value { color: #4ade80; }
+        .trailers-stat-box.warn .value { color: #fbbf24; }
+        .trailers-stat-box.muted .value { color: rgba(255,255,255,0.7); }
+        .trailers-last-run {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(255,255,255,0.08);
+            font-size: 0.875rem;
+            color: rgba(255,255,255,0.7);
+        }
+        .trailers-intro {
+            color: rgba(255,255,255,0.75);
+            font-size: 0.9rem;
+            line-height: 1.5;
+            margin-bottom: 1.5rem;
+        }
+        .trailers-schedule-row {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+        .trailers-schedule-row .inputContainer { margin-bottom: 0; }
+        .trailers-danger {
+            border-color: rgba(239,68,68,0.3);
+            background: rgba(239,68,68,0.06);
+        }
+        .trailers-danger h3 { color: #f87171; }
+        .trailers-danger .fieldDescription { color: rgba(255,255,255,0.6); }
+        .trailers-ytdlp-alert {
+            background: rgba(185,28,28,0.25) !important;
+            border: 2px solid #dc2626 !important;
+            border-radius: 6px;
+            padding: 1rem 1.25rem;
+            margin-bottom: 1.25rem;
+            color: #fecaca !important;
+            font-size: 0.9rem;
+            line-height: 1.45;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            box-shadow: 0 0 0 1px rgba(0,0,0,0.2) inset;
+        }
+        .trailers-ytdlp-alert.hidden { display: none !important; }
+        .trailers-ytdlp-alert-icon { color: #fca5a5 !important; font-size: 1.25rem; flex-shrink: 0; line-height: 1; }
+        .trailers-ytdlp-alert-msg { flex: 1; min-width: 0; word-wrap: break-word; }
+        .trailers-ytdlp-ok {
+            background: rgba(34,197,94,0.12);
+            border-left: 4px solid #22c55e;
+            color: rgba(255,255,255,0.85);
+            padding: 0.6rem 1rem;
+            border-radius: 4px;
+            margin-bottom: 1.5rem;
+            font-size: 0.875rem;
+            line-height: 1.5;
+            min-height: 1.5em;
+            box-sizing: border-box;
+        }
+        .trailers-ytdlp-ok.hidden { display: none !important; }
+    </style>
+</head>
+<body>
+    <div id="JellyTrailersConfigPage" data-role="page" class="page type-interior pluginConfigurationPage" data-require="emby-input,emby-button,emby-select,emby-checkbox">
+        <div data-role="content">
+            <div class="content-primary">
+                <form id="JellyTrailersConfigForm">
+                    <div class="sectionTitleContainer flex align-items-center">
+                        <h2 class="sectionTitle">JellyTrailers</h2>
+                    </div>
+                    <p class="trailers-intro" style="color: rgba(255,255,255,0.75); font-size: 0.9rem; line-height: 1.5; margin-bottom: 1.5rem;">Download movie and TV show trailers with yt-dlp and place them next to your media. Run the scheduled task &quot;Download Trailers&quot; manually in Dashboard → Scheduled Tasks, or set a schedule below.</p>
+
+                    <div id="JellyTrailersYtDlpAlert" class="trailers-ytdlp-alert hidden" role="alert" style="display: none; background: #7f1d1d; border: 2px solid #dc2626; border-radius: 6px; padding: 1rem 1.25rem; margin-bottom: 1.25rem; color: #fecaca; font-size: 0.9rem; line-height: 1.45; flex-direction: row; align-items: flex-start; gap: 0.75rem; box-sizing: border-box;">
+                        <span aria-hidden="true" style="color: #fca5a5; font-size: 1.25rem; flex-shrink: 0; line-height: 1;">⚠</span>
+                        <div style="flex: 1; min-width: 0; word-wrap: break-word;">
+                            <strong id="JellyTrailersYtDlpAlertTitle" style="display: block; margin-bottom: 0.25rem; color: #fca5a5;">yt-dlp not available</strong>
+                            <span id="JellyTrailersYtDlpAlertMessage"></span>
+                            <div style="margin-top: 0.75rem;">
+                                <button type="button" id="BtnDownloadYtDlp" is="emby-button" class="raised button-submit emby-button">
+                                    <span>Download yt-dlp</span>
+                                </button>
+                                <span id="JellyTrailersYtDlpDownloadStatus" style="margin-left: 0.5rem;"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="JellyTrailersYtDlpOk" class="trailers-ytdlp-ok hidden" style="display: none; padding: 0.65rem 1rem; margin-bottom: 1.5rem; line-height: 1.5; min-height: 1.5em; box-sizing: border-box;"></div>
+
+                    <div class="trailers-card" id="JellyTrailersStatsCard" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 1.25rem; margin-bottom: 1.5rem;">
+                        <h3 style="margin: 0 0 1rem 0; font-size: 1rem; font-weight: 600; color: rgba(255,255,255,0.9);">Statistics</h3>
+                        <div id="JellyTrailersStatsContent">Loading stats…</div>
+                    </div>
+
+                    <div class="trailers-card" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 1.25rem; margin-bottom: 1.5rem;">
+                        <h3 style="margin: 0 0 1rem 0; font-size: 1rem; font-weight: 600; color: rgba(255,255,255,0.9);">Schedule</h3>
+                        <div class="checkboxContainer checkboxContainer-withDescription" style="margin-bottom: 1rem;">
+                            <label class="emby-checkbox-label">
+                                <input id="ScheduleEnabled" name="ScheduleEnabled" type="checkbox" is="emby-checkbox" />
+                                <span>Run Download Trailers on a schedule</span>
+                            </label>
+                        </div>
+                        <div class="trailers-schedule-row">
+                            <div class="inputContainer" id="ScheduleTimeContainer">
+                                <label class="inputLabel inputLabelUnfocused" for="ScheduleTime">Daily at</label>
+                                <input id="ScheduleTime" name="ScheduleTime" type="time" is="emby-input" value="02:00" />
+                            </div>
+                            <button type="button" id="BtnUpdateSchedule" is="emby-button" class="raised button-submit emby-button">
+                                <span>Update schedule</span>
+                            </button>
+                        </div>
+                        <div class="fieldDescription" style="margin-top: 0.25rem;">Time of day (server time) to run the download task. Ignored if schedule is disabled.</div>
+                        <div id="ScheduleStatus" class="fieldDescription" style="margin-top: 0.5em;"></div>
+                    </div>
+
+                    <div class="trailers-card" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 1.25rem; margin-bottom: 1.5rem;">
+                        <h3 style="margin: 0 0 1rem 0; font-size: 1rem; font-weight: 600; color: rgba(255,255,255,0.9);">Download settings</h3>
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused" for="YtDlpPath">yt-dlp path</label>
+                        <input id="YtDlpPath" name="YtDlpPath" type="text" is="emby-input" placeholder="(auto-download)" />
+                        <div class="fieldDescription">Leave empty to use the plugin-managed copy (downloaded automatically). Set a path to use your own yt-dlp (e.g. /usr/local/bin/yt-dlp or yt-dlp).</div>
+                    </div>
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused" for="TrailerPath">Trailer filename</label>
+                        <input id="TrailerPath" name="TrailerPath" type="text" is="emby-input" />
+                        <div class="fieldDescription">Filename relative to each media folder (e.g. trailer.mp4).</div>
+                    </div>
+                    <div class="selectContainer">
+                        <label class="selectLabel" for="Quality">Max quality</label>
+                        <select is="emby-select" id="Quality" name="Quality" class="emby-select-withcolor emby-select">
+                            <option value="best">Best</option>
+                            <option value="1080p">1080p</option>
+                            <option value="720p">720p</option>
+                            <option value="480p">480p</option>
+                        </select>
+                    </div>
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused" for="DelaySeconds">Delay between downloads (seconds)</label>
+                        <input id="DelaySeconds" name="DelaySeconds" type="number" is="emby-input" min="0" />
+                        <div class="fieldDescription">Seconds to wait between each download (reduces throttling).</div>
+                    </div>
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused" for="RetryDelaySeconds">Retry delay (seconds)</label>
+                        <input id="RetryDelaySeconds" name="RetryDelaySeconds" type="number" is="emby-input" min="0" />
+                        <div class="fieldDescription">Seconds to wait before retrying a failed download.</div>
+                    </div>
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused" for="MaxTrailersPerRun">Max trailers per run</label>
+                        <input id="MaxTrailersPerRun" name="MaxTrailersPerRun" type="number" is="emby-input" min="0" />
+                        <div class="fieldDescription">Maximum trailers per scheduled run (0 = no limit).</div>
+                    </div>
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused" for="YtDlpOptionsJson">Extra yt-dlp options (JSON)</label>
+                        <input id="YtDlpOptionsJson" name="YtDlpOptionsJson" type="text" is="emby-input" />
+                        <div class="fieldDescription">Optional JSON object (e.g. {} or format overrides).</div>
+                    </div>
+                    <div>
+                        <button is="emby-button" type="submit" class="raised button-submit block emby-button">
+                            <span>Save</span>
+                        </button>
+                    </div>
+                    </div>
+
+                    <div class="trailers-card trailers-danger" style="border: 1px solid rgba(239,68,68,0.3); background: rgba(239,68,68,0.06); border-radius: 8px; padding: 1.25rem; margin-bottom: 1.5rem;">
+                        <h3 style="margin: 0 0 1rem 0; font-size: 1rem; font-weight: 600; color: #f87171;">Remove all trailers</h3>
+                        <p class="fieldDescription" style="margin-bottom: 1rem;">Delete every trailer file from movie and TV library folders. Uses the &quot;Trailer filename&quot; setting above. A library scan will run after removal.</p>
+                        <button type="button" id="BtnRemoveAllTrailers" is="emby-button" class="raised button-cancel block emby-button">
+                            <span>Remove all trailers</span>
+                        </button>
+                        <div id="RemoveAllTrailersStatus" class="fieldDescription" style="margin-top: 0.5em;"></div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <script type="text/javascript">
+            (function() {
+                var pluginId = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890';
+                var page = document.querySelector('#JellyTrailersConfigPage');
+                var form = document.querySelector('#JellyTrailersConfigForm');
+                var lastYtDlpVersion = '';
+
+                function formatDate(iso) {
+                    if (!iso) return '—';
+                    try {
+                        var d = new Date(iso);
+                        return isNaN(d.getTime()) ? iso : d.toLocaleDateString() + ' ' + d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+                    } catch (e) { return iso; }
+                }
+
+                function renderStats(stats) {
+                    var el = document.querySelector('#JellyTrailersStatsContent');
+                    var hasFolderStats = stats && (stats.totalFolders || 0) > 0;
+                    var hasRunStats = stats && (stats.totalDownloaded > 0 || stats.totalFailed > 0 || stats.lastRunDate);
+                    if (!stats || (!hasFolderStats && !hasRunStats)) {
+                        el.innerHTML = '<p style="color: rgba(255,255,255,0.5); margin: 0;">No stats yet. Run the &quot;Download Trailers&quot; task once (Dashboard → Scheduled Tasks) to see folder and download stats.</p>';
+                        return;
+                    }
+                    var totalD = stats.totalDownloaded || 0;
+                    var totalF = stats.totalFailed || 0;
+                    var d7 = stats.last7Days || 0;
+                    var d30 = stats.last30Days || 0;
+                    var d365 = stats.last365Days || 0;
+                    var runs = stats.totalRuns != null ? stats.totalRuns : 0;
+                    var totalFolders = stats.totalFolders || 0;
+                    var withTrailer = stats.foldersWithTrailer || 0;
+                    var missing = totalFolders - withTrailer;
+                    var pct = totalFolders > 0 ? Math.round((withTrailer / totalFolders) * 100) : 0;
+                    var gridStyle = 'display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 0.75rem;';
+                    var boxStyle = 'background: rgba(0,0,0,0.25); border-radius: 6px; padding: 0.75rem 1rem; text-align: center; border: 1px solid rgba(255,255,255,0.06);';
+                    var labelStyle = 'font-size: 0.75rem; color: rgba(255,255,255,0.55); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 0.25rem;';
+                    var valueGreen = 'font-size: 1.25rem; font-weight: 600; color: #4ade80;';
+                    var valueWarn = 'font-size: 1.25rem; font-weight: 600; color: #fbbf24;';
+                    var valueMuted = 'font-size: 1.25rem; font-weight: 600; color: rgba(255,255,255,0.7);';
+                    var btnBoxStyle = boxStyle + ' display: flex; align-items: center; justify-content: flex-end;';
+                    var html = '';
+                    if (hasFolderStats) {
+                        html += '<div style="margin-bottom: 1rem; padding: 0.75rem 1rem; background: rgba(0,0,0,0.2); border-radius: 6px; border: 1px solid rgba(255,255,255,0.08); font-size: 0.9rem; color: rgba(255,255,255,0.85);">' +
+                            '<span style="font-weight: 600;">Folders with trailer:</span> ' + withTrailer + ' / ' + totalFolders + ' <span style="color: rgba(255,255,255,0.6);">(' + pct + '%)</span>' +
+                            (missing > 0 ? ' · <span style="color: #fbbf24;">Missing: ' + missing + '</span>' : ' · <span style="color: #4ade80;">All have trailer</span>') +
+                            '</div>';
+                    }
+                    html += '<div style="' + gridStyle + '">' +
+                        '<div style="' + boxStyle + '"><div style="' + labelStyle + '">Total downloaded</div><div style="' + valueGreen + '">' + totalD + '</div></div>' +
+                        '<div style="' + boxStyle + '"><div style="' + labelStyle + '">Last 7 days</div><div style="' + valueGreen + '">' + d7 + '</div></div>' +
+                        '<div style="' + boxStyle + '"><div style="' + labelStyle + '">Last 30 days</div><div style="' + valueGreen + '">' + d30 + '</div></div>' +
+                        '<div style="' + boxStyle + '"><div style="' + labelStyle + '">Last year</div><div style="' + valueGreen + '">' + d365 + '</div></div>' +
+                        '<div style="' + boxStyle + '"><div style="' + labelStyle + '">Failed (total)</div><div style="' + valueWarn + '">' + totalF + '</div></div>' +
+                        '<div style="' + boxStyle + '"><div style="' + labelStyle + '">Task runs</div><div style="' + valueMuted + '">' + runs + '</div></div>' +
+                        '<div style="' + btnBoxStyle + '"><button type="button" id="BtnResetStats" is="emby-button" class="emby-button" style="padding: 0.35rem 0.75rem; font-size: 0.875rem; background: rgba(60,60,60,0.95); color: #fff; border: 1px solid rgba(255,255,255,0.25); border-radius: 4px;">Reset</button></div>' +
+                        '</div>';
+                    if (stats.lastRunDate) {
+                        var ytDlpVer = (typeof lastYtDlpVersion !== 'undefined' && lastYtDlpVersion) ? ('yt-dlp: ' + lastYtDlpVersion) : '';
+                        html += '<div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.08); font-size: 0.875rem; color: rgba(255,255,255,0.7); display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap;">' +
+                            '<span>Last run: ' + formatDate(stats.lastRunDate) + ' — <strong>' + (stats.lastRunDownloaded || 0) + '</strong> downloaded, <strong>' + (stats.lastRunFailed || 0) + '</strong> failed</span>' +
+                            '<span id="JellyTrailersStatsYtDlpVersion" style="flex-shrink: 0;">' + (ytDlpVer || '') + '</span></div>';
+                    }
+                    el.innerHTML = html;
+                }
+
+                function refreshStats() {
+                    var url = ApiClient.getUrl('Plugins/JellyTrailers/Stats') + '?t=' + Date.now();
+                    ApiClient.getJSON(url).then(function(stats) {
+                        renderStats(stats);
+                    }).catch(function() {
+                        document.querySelector('#JellyTrailersStatsContent').textContent = 'Stats unavailable.';
+                    });
+                }
+
+                function refreshYtDlpCheck() {
+                    var alertEl = document.getElementById('JellyTrailersYtDlpAlert');
+                    var okEl = document.getElementById('JellyTrailersYtDlpOk');
+                    var titleEl = document.getElementById('JellyTrailersYtDlpAlertTitle');
+                    var msgEl = document.getElementById('JellyTrailersYtDlpAlertMessage');
+                    function showAlert(title, msg) {
+                        okEl.style.display = 'none';
+                        okEl.classList.add('hidden');
+                        lastYtDlpVersion = '';
+                        var verSpan = document.getElementById('JellyTrailersStatsYtDlpVersion');
+                        if (verSpan) verSpan.textContent = '';
+                        titleEl.textContent = title;
+                        msgEl.textContent = msg;
+                        document.getElementById('JellyTrailersYtDlpDownloadStatus').textContent = '';
+                        alertEl.style.display = 'flex';
+                        alertEl.classList.remove('hidden');
+                    }
+                    function hideAlert() {
+                        alertEl.style.display = 'none';
+                        alertEl.classList.add('hidden');
+                        okEl.style.display = 'none';
+                        okEl.classList.add('hidden');
+                    }
+                    ApiClient.getJSON(ApiClient.getUrl('Plugins/JellyTrailers/YtDlpCheck') + '?t=' + Date.now()).then(function(r) {
+                        if (r.Available) {
+                            hideAlert();
+                            lastYtDlpVersion = r.Message || '';
+                            var verSpan = document.getElementById('JellyTrailersStatsYtDlpVersion');
+                            if (verSpan) {
+                                verSpan.textContent = lastYtDlpVersion ? ('yt-dlp: ' + lastYtDlpVersion) : '';
+                            } else {
+                                okEl.style.display = 'block';
+                                okEl.classList.remove('hidden');
+                                okEl.textContent = lastYtDlpVersion ? ('yt-dlp: ' + lastYtDlpVersion) : 'yt-dlp is available.';
+                            }
+                        } else {
+                            showAlert('yt-dlp not available', r.Message || 'Set the full path below or install it where Jellyfin runs.');
+                        }
+                    }).catch(function() {
+                        showAlert('Could not check yt-dlp', 'Check failed. Set the path below if you have installed it.');
+                    });
+                }
+
+                var statsPollInterval;
+
+                page.addEventListener('pageshow', function() {
+                    Dashboard.showLoadingMsg();
+                    ApiClient.getPluginConfiguration(pluginId).then(function(config) {
+                        document.querySelector('#YtDlpPath').value = config.YtDlpPath || '';
+                        document.querySelector('#TrailerPath').value = config.TrailerPath || 'trailer.mp4';
+                        document.querySelector('#Quality').value = config.Quality || '720p';
+                        document.querySelector('#DelaySeconds').value = config.DelaySeconds != null ? config.DelaySeconds : 3;
+                        document.querySelector('#RetryDelaySeconds').value = config.RetryDelaySeconds != null ? config.RetryDelaySeconds : 5;
+                        document.querySelector('#MaxTrailersPerRun').value = config.MaxTrailersPerRun != null ? config.MaxTrailersPerRun : 50;
+                        document.querySelector('#YtDlpOptionsJson').value = config.YtDlpOptionsJson || '{}';
+                        Dashboard.hideLoadingMsg();
+                        refreshYtDlpCheck();
+                    });
+                    refreshStats();
+                    if (statsPollInterval) clearInterval(statsPollInterval);
+                    statsPollInterval = setInterval(refreshStats, 10000);
+                    ApiClient.getJSON(ApiClient.getUrl('ScheduledTasks')).then(function(tasks) {
+                        var task = tasks.find(function(t) { return t.Key === 'JellyTrailersDownload'; });
+                        var triggers = task && (task.Triggers || task.TriggerInfo || []);
+                        if (task && triggers.length > 0) {
+                            var trigger = triggers[0];
+                            document.querySelector('#ScheduleEnabled').checked = true;
+                            var ticks = trigger.TimeOfDayTicks;
+                            if (ticks != null) {
+                                var sec = Math.floor(Number(ticks) / 1e7);
+                                var h = Math.floor(sec / 3600) % 24;
+                                var m = Math.floor((sec % 3600) / 60);
+                                document.querySelector('#ScheduleTime').value = (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m;
+                            }
+                        } else {
+                            document.querySelector('#ScheduleEnabled').checked = false;
+                            document.querySelector('#ScheduleTime').value = '02:00';
+                        }
+                    }).catch(function() {
+                        document.querySelector('#ScheduleEnabled').checked = false;
+                        document.querySelector('#ScheduleTime').value = '02:00';
+                    });
+                });
+
+                page.addEventListener('pagehide', function() {
+                    if (statsPollInterval) {
+                        clearInterval(statsPollInterval);
+                        statsPollInterval = null;
+                    }
+                });
+
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    Dashboard.showLoadingMsg();
+                    ApiClient.getPluginConfiguration(pluginId).then(function(config) {
+                        config.YtDlpPath = (document.querySelector('#YtDlpPath').value || '').replace(/^["']|["']$/g, '').trim();
+                        config.TrailerPath = document.querySelector('#TrailerPath').value || 'trailer.mp4';
+                        config.Quality = document.querySelector('#Quality').value || '720p';
+                        config.DelaySeconds = parseInt(document.querySelector('#DelaySeconds').value, 10) || 3;
+                        config.RetryDelaySeconds = parseInt(document.querySelector('#RetryDelaySeconds').value, 10) || 5;
+                        config.MaxTrailersPerRun = parseInt(document.querySelector('#MaxTrailersPerRun').value, 10) || 0;
+                        config.YtDlpOptionsJson = document.querySelector('#YtDlpOptionsJson').value || '{}';
+                        ApiClient.updatePluginConfiguration(pluginId, config).then(function(result) {
+                            Dashboard.processPluginConfigurationUpdateResult(result);
+                            refreshYtDlpCheck();
+                        });
+                    });
+                    return false;
+                });
+
+                document.querySelector('#BtnUpdateSchedule').addEventListener('click', function() {
+                    var statusEl = document.querySelector('#ScheduleStatus');
+                    statusEl.textContent = 'Updating…';
+                    ApiClient.getJSON(ApiClient.getUrl('ScheduledTasks')).then(function(tasks) {
+                        var task = tasks.find(function(t) { return t.Key === 'JellyTrailersDownload'; });
+                        if (!task) {
+                            statusEl.textContent = 'JellyTrailers download task not found.';
+                            return;
+                        }
+                        var enabled = document.querySelector('#ScheduleEnabled').checked;
+                        var triggers = [];
+                        if (enabled) {
+                            var timeStr = document.querySelector('#ScheduleTime').value || '02:00';
+                            var parts = timeStr.split(':');
+                            var h = parseInt(parts[0], 10) || 0;
+                            var m = parseInt(parts[1], 10) || 0;
+                            var sec = (h * 3600 + m * 60) % 86400;
+                            var timeOfDayTicks = sec * 1e7;
+                            triggers = [{ Type: 'DailyTrigger', TimeOfDayTicks: timeOfDayTicks }];
+                        }
+                        return ApiClient.ajax({
+                            type: 'POST',
+                            url: ApiClient.getUrl('ScheduledTasks/' + task.Id),
+                            data: JSON.stringify(triggers),
+                            contentType: 'application/json'
+                        }).then(function() {
+                            statusEl.textContent = 'Schedule updated.';
+                        }).catch(function(err) {
+                            statusEl.textContent = 'Failed to update schedule: ' + (err.message || err);
+                        });
+                    }).catch(function(err) {
+                        statusEl.textContent = 'Failed to load tasks: ' + (err.message || err);
+                    });
+                });
+
+                document.querySelector('#JellyTrailersStatsCard').addEventListener('click', function(e) {
+                    if (e.target.id !== 'BtnResetStats' && !e.target.closest('#BtnResetStats')) return;
+                    if (!confirm('Reset all trailer statistics (downloaded/failed counts and run history)?')) return;
+                    var contentEl = document.querySelector('#JellyTrailersStatsContent');
+                    contentEl.textContent = 'Resetting…';
+                    ApiClient.ajax({
+                        type: 'POST',
+                        url: ApiClient.getUrl('Plugins/JellyTrailers/Stats/Reset')
+                    }).then(function() {
+                        refreshStats();
+                    }).catch(function(err) {
+                        contentEl.textContent = 'Reset failed: ' + (err.message || err);
+                    });
+                });
+
+                function parseYtDlpDownloadResponse(response) {
+                    if (!response) return null;
+                    if (typeof response.Success !== 'undefined') return response;
+                    var raw = response.responseText || response.response || (typeof response === 'string' ? response : null);
+                    if (raw && typeof raw === 'string') {
+                        try { return JSON.parse(raw); } catch (e) { return null; }
+                    }
+                    return null;
+                }
+
+                document.querySelector('#BtnDownloadYtDlp').addEventListener('click', function() {
+                    var btn = document.querySelector('#BtnDownloadYtDlp');
+                    var statusEl = document.querySelector('#JellyTrailersYtDlpDownloadStatus');
+                    btn.disabled = true;
+                    statusEl.textContent = 'Downloading…';
+                    ApiClient.ajax({
+                        type: 'POST',
+                        url: ApiClient.getUrl('Plugins/JellyTrailers/YtDlpDownload'),
+                        dataType: 'json'
+                    }).then(function(response) {
+                        var r = parseYtDlpDownloadResponse(response);
+                        if (!r) {
+                            statusEl.textContent = 'Download failed. Could not read server response.';
+                            return;
+                        }
+                        if (r.Success && r.Path) {
+                            document.querySelector('#YtDlpPath').value = r.Path;
+                            statusEl.textContent = 'Saving path…';
+                            return ApiClient.getPluginConfiguration(pluginId).then(function(config) {
+                                config.YtDlpPath = r.Path;
+                                return ApiClient.updatePluginConfiguration(pluginId, config);
+                            }).then(function() {
+                                statusEl.textContent = r.Message || 'Downloaded and path saved.';
+                                refreshYtDlpCheck();
+                            }).catch(function(saveErr) {
+                                statusEl.textContent = 'Downloaded. Save the settings below to use the new path.';
+                                refreshYtDlpCheck();
+                            });
+                        } else if (r.Success) {
+                            statusEl.textContent = r.Message || 'Downloaded.';
+                            refreshYtDlpCheck();
+                        } else {
+                            statusEl.textContent = (r.Message && r.Message.trim()) ? r.Message : 'Download failed. Check Jellyfin server logs.';
+                        }
+                    }).catch(function(err) {
+                        var msg = (err && err.message) ? err.message : String(err);
+                        statusEl.textContent = 'Request failed: ' + (msg || 'no details. Check Jellyfin logs.');
+                    }).finally(function() {
+                        btn.disabled = false;
+                    });
+                });
+
+                document.querySelector('#BtnRemoveAllTrailers').addEventListener('click', function() {
+                    if (!confirm('This will delete all trailer files in your movie and TV libraries (using the trailer filename setting above). Continue?')) {
+                        return;
+                    }
+                    var statusEl = document.querySelector('#RemoveAllTrailersStatus');
+                    statusEl.textContent = 'Starting task…';
+                    ApiClient.getJSON(ApiClient.getUrl('ScheduledTasks')).then(function(tasks) {
+                        var task = tasks.find(function(t) { return t.Key === 'JellyTrailersRemoveAll'; });
+                        if (!task) {
+                            statusEl.textContent = 'JellyTrailers remove-all task not found.';
+                            return;
+                        }
+                        return ApiClient.ajax({
+                            type: 'POST',
+                            url: ApiClient.getUrl('ScheduledTasks/Running/' + task.Id)
+                        }).then(function() {
+                            statusEl.textContent = 'Task started. Check Dashboard → Scheduled Tasks for progress.';
+                        }).catch(function(err) {
+                            statusEl.textContent = 'Failed to start task: ' + (err.message || err);
+                        });
+                    }).catch(function(err) {
+                        statusEl.textContent = 'Failed to load tasks: ' + (err.message || err);
+                    });
+                });
+            })();
+        </script>
+    </div>
+</body>
+</html>

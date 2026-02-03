@@ -1,0 +1,65 @@
+# Virtual environment
+venv/
+.venv/
+env/
+.env/
+
+# Python
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local / stray
+home/
+
+# Local config / downloads (config contains secrets)
+config.json
+*.local
+downloads/
+
+# Run lock (single-instance)
+.trailers.run
+
+# Logs
+trailers.log
+cron.log
+
+# Legacy / local data (plugin no longer uses download_list.json)
+download_list.json
+
+# Jellyfin plugin (.NET)
+[Jj]ellyfin.[Pp]lugin.*/bin/
+[Jj]ellyfin.[Pp]lugin.*/obj/
+*.user
+*.dll
+*.pdb
+*.nupkg
