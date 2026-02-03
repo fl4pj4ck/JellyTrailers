@@ -63,3 +63,4 @@ download_list.json
 *.dll
 *.pdb
 *.nupkg
+JellyTrailers_*.zip

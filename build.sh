@@ -10,10 +10,13 @@
 #   → default /config/plugins. Override with JELLYFIN_PLUGINS_PATH if needed.
 #
 # Usage:
-#   ./build.sh [-remove] [CONTAINER]
+#   ./build.sh [-remove | -now] [CONTAINER]
 #
 #   -remove   Remove both Jellyfin.Plugin.Trailers and Jellyfin.Plugin.JellyTrailers from
 #             the container's plugins folder and exit (no build, no install).
+#   -now      Build the plugin and create the release zip (name from manifest.json).
+#             Output: ./JellyTrailers_<version>.zip at repo root. No container copy.
+#             Then create a GitHub release, tag vX.Y.Z, and attach the zip.
 #   CONTAINER: Podman container name or ID (default: $JELLYFIN_CONTAINER or "jellyfin")
 #
 #   Optional env:
@@ -28,8 +31,12 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
 REMOVE=0
+NOW=0
 if [[ "${1:-}" == "-remove" ]]; then
   REMOVE=1
+  shift
+elif [[ "${1:-}" == "-now" ]]; then
+  NOW=1
   shift
 fi
 CONTAINER="${1:-${JELLYFIN_CONTAINER:-jellyfin}}"
@@ -82,8 +89,33 @@ ensure_podman() {
 
 echo "Checking prerequisites..."
 ensure_dotnet
-ensure_podman
-echo "Prerequisites OK (dotnet: $(dotnet --version), podman: $(podman --version 2>/dev/null || echo 'ok'))."
+if [[ "$NOW" -eq 0 ]]; then
+  ensure_podman
+fi
+echo "Prerequisites OK (dotnet: $(dotnet --version)$( [[ "$NOW" -eq 0 ]] && echo ", podman: $(podman --version 2>/dev/null || echo 'ok')" ))."
+
+# --- -now: build and create release zip only ---
+if [[ "$NOW" -eq 1 ]]; then
+  echo "Building $PLUGIN_NAME for release (net8.0)..."
+  dotnet build Jellyfin.Plugin.JellyTrailers.sln -c Release -v q
+  OUT_NET8="$BUILD_DIR/net8.0"
+  if [[ ! -f "$OUT_NET8/$PLUGIN_NAME.dll" ]]; then
+    echo "Error: Build output not found: $OUT_NET8/$PLUGIN_NAME.dll" >&2
+    exit 1
+  fi
+  # Zip filename from manifest.json (first version's sourceUrl basename)
+  if command -v jq &>/dev/null; then
+    ZIP_NAME=$(jq -r '.[0].versions[0].sourceUrl | split("/") | last' manifest.json 2>/dev/null)
+  fi
+  if [[ -z "${ZIP_NAME:-}" || "$ZIP_NAME" == "null" ]]; then
+    ZIP_NAME="JellyTrailers_1.0.0.0.zip"
+  fi
+  ZIP_PATH="$SCRIPT_DIR/$ZIP_NAME"
+  ( cd "$OUT_NET8" && zip -r "$ZIP_PATH" . -q )
+  echo "Created: $ZIP_PATH"
+  echo "Next: create a GitHub release with tag v1.0.0 (or the version in manifest.json), attach $ZIP_NAME, publish."
+  exit 0
+fi
 
 # --- Checks ---
 if ! podman container exists "$CONTAINER" 2>/dev/null; then

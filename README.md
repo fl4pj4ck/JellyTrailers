@@ -30,6 +30,25 @@ To install manually (e.g. without a catalog): build the plugin (see [Build](#bui
 dotnet build Jellyfin.Plugin.JellyTrailers.sln -c Release
 ```
 
+## Publishing a release (so the catalog install works)
+
+1. **Build** the plugin:
+   ```bash
+   dotnet build Jellyfin.Plugin.JellyTrailers.sln -c Release
+   ```
+
+2. **Zip** the build output. The zip must be named exactly as in [manifest.json](manifest.json) (e.g. `JellyTrailers_1.0.0.0.zip`). From the repo root:
+   ```bash
+   cd Jellyfin.Plugin.JellyTrailers/bin/Release/net8.0
+   zip -r ../../../../../JellyTrailers_1.0.0.0.zip .
+   cd ../../../../..
+   ```
+   Or on Windows (PowerShell): zip the *contents* of `Jellyfin.Plugin.JellyTrailers\bin\Release\net8.0\` into `JellyTrailers_1.0.0.0.zip`.
+
+3. **Create a GitHub release**: Repo → **Releases** → **Create a new release**. Choose tag **v1.0.0** (create the tag if it doesn’t exist), add release notes, then **Attach** the zip file `JellyTrailers_1.0.0.0.zip`. Publish.
+
+After that, the manifest URL in the README will point to a working catalog and the version’s `sourceUrl` will download this zip. If you add a new version, add an entry to `manifest.json` and publish a new release with a matching zip name.
+
 ## Repo layout
 
 - `Jellyfin.Plugin.JellyTrailers/` – plugin source (C#).
