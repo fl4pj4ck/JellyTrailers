@@ -1,5 +1,7 @@
 # JellyTrailers
 
+<img width="512" height="512" alt="image" src="https://github.com/user-attachments/assets/45284c89-3a34-4c64-b207-1f69502293ef" />
+
 Search and download movie and TV show trailers using [yt-dlp](https://github.com/yt-dlp/yt-dlp).
 
 ## Jellyfin plugin
