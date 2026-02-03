@@ -18,7 +18,7 @@ See **[Jellyfin.Plugin.JellyTrailers/README.md](Jellyfin.Plugin.JellyTrailers/RE
 
 ## How to install the plugin in Jellyfin
 
-1. In Jellyfin go to **Dashboard → Plugins → Repositories** and add this manifest URL: **https://raw.githubusercontent.com/fl4pj4ck/JellyTrailers/main/manifest.json**
+1. In Jellyfin go to **Dashboard → Plugins → Repositories** and add the plugin manifest (catalog) URL.
 2. Open **Dashboard → Plugins**, find **JellyTrailers** in the catalog, install it, then **Enable** the plugin.
 3. **Configure** in **Dashboard → Plugins → JellyTrailers** (yt-dlp path, trailer filename, quality, etc.).
 
@@ -29,10 +29,6 @@ To install manually (e.g. without a catalog): build the plugin (see [Build](#bui
 ```bash
 dotnet build Jellyfin.Plugin.JellyTrailers.sln -c Release
 ```
-
-## Plugin tile / logo
-
-Put your plugin icon in **`assets/icon.png`** (or `icon.jpg`). Use a square image (e.g. 128×128 or 256×256). For the plugin **catalog**, set `imageUrl` in your manifest to that file’s public URL (e.g. `https://raw.githubusercontent.com/yourname/trailers/main/assets/icon.png`). See [assets/README.md](assets/README.md).
 
 ## Repo layout
 
