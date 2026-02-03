@@ -18,7 +18,7 @@ See **[Jellyfin.Plugin.JellyTrailers/README.md](Jellyfin.Plugin.JellyTrailers/RE
 
 ## How to install the plugin in Jellyfin
 
-1. In Jellyfin go to **Dashboard → Plugins → Repositories** and add the plugin manifest (catalog) URL.
+1. In Jellyfin go to **Dashboard → Plugins → Repositories** and add this manifest URL: **https://raw.githubusercontent.com/fl4pj4ck/JellyTrailers/main/manifest.json**
 2. Open **Dashboard → Plugins**, find **JellyTrailers** in the catalog, install it, then **Enable** the plugin.
 3. **Configure** in **Dashboard → Plugins → JellyTrailers** (yt-dlp path, trailer filename, quality, etc.).
 
