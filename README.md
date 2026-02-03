@@ -13,17 +13,22 @@ See **[Jellyfin.Plugin.JellyTrailers/README.md](Jellyfin.Plugin.JellyTrailers/RE
 
 - Requirements (Jellyfin, yt-dlp)
 - Installing yt-dlp in Docker (LinuxServer mod, official image)
-- Build and install (copy plugin into Jellyfin’s plugins folder)
 - Configuration (all settings in the plugin UI)
 - Scheduled task **Download Trailers (JellyTrailers)** (default daily at 02:00)
+
+## How to install the plugin in Jellyfin
+
+1. In Jellyfin go to **Dashboard → Plugins → Repositories** and add the plugin manifest (catalog) URL.
+2. Open **Dashboard → Plugins**, find **JellyTrailers** in the catalog, install it, then **Enable** the plugin.
+3. **Configure** in **Dashboard → Plugins → JellyTrailers** (yt-dlp path, trailer filename, quality, etc.).
+
+To install manually (e.g. without a catalog): build the plugin (see [Build](#build) below), copy the plugin folder into Jellyfin’s plugins directory (e.g. `/var/lib/jellyfin/plugins/` on Linux, `%ProgramData%\Jellyfin\Server\plugins\` on Windows), restart Jellyfin, then enable the plugin in Dashboard → Plugins. You can use [build.sh](build.sh) to build and copy into a Podman Jellyfin container.
 
 ## Build
 
 ```bash
 dotnet build Jellyfin.Plugin.JellyTrailers.sln -c Release
 ```
-
-Optional: use [build.sh](build.sh) to build and copy the plugin into a Podman Jellyfin container.
 
 ## Plugin tile / logo
 
