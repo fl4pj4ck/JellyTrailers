@@ -88,6 +88,7 @@ public class TrailerDownloadTask : IScheduledTask
         if (needs.Count == 0)
         {
             _logger.LogInformation("Trailer task: nothing to do (all have trailer or list empty). Skipped: {Skipped}.", skipped);
+            _logger.LogInformation("JellyTrailers run finished: 0 downloaded, 0 failed, {Skipped} skipped.", skipped);
             statsStore.RecordRun(0, 0);
             LibraryScanHelper.QueueLibraryScan(_libraryManager, _logger);
             return;
@@ -139,11 +140,11 @@ public class TrailerDownloadTask : IScheduledTask
                     await Task.Delay(delayMs, cancellationToken).ConfigureAwait(false);
             }
 
-            _logger.LogInformation("Trailer task done: processed {Processed}, skipped {Skipped}, failed {Failed}.", processed, skipped, failed);
         }
         finally
         {
-            // Always record stats (and trigger refresh) even when task is cancelled mid-run
+            // Always record stats and log run summary (including when task is cancelled mid-run)
+            _logger.LogInformation("JellyTrailers run finished: {Processed} downloaded, {Failed} failed, {Skipped} skipped.", processed, failed, skipped);
             statsStore.RecordRun(processed, failed);
             LibraryScanHelper.QueueLibraryScan(_libraryManager, _logger);
         }
