@@ -39,7 +39,8 @@ public class PluginConfiguration : BasePluginConfiguration
     public int MaxTrailersPerRun { get; set; } = 50;
 
     /// <summary>
-    /// Optional extra yt-dlp options as JSON (e.g. empty object or format override).
+    /// Optional extra yt-dlp options as JSON. Only allowlisted option names are applied (e.g. user-agent, proxy, format);
+    /// execution-related options (exec, postprocessor-args, etc.) are ignored for security.
     /// </summary>
     public string YtDlpOptionsJson { get; set; } = "{}";
 

@@ -194,7 +194,7 @@
                     <div class="inputContainer">
                         <label class="inputLabel inputLabelUnfocused" for="YtDlpOptionsJson">Extra yt-dlp options (JSON)</label>
                         <input id="YtDlpOptionsJson" name="YtDlpOptionsJson" type="text" is="emby-input" />
-                        <div class="fieldDescription">Optional JSON object (e.g. {} or format overrides).</div>
+                        <div class="fieldDescription">Optional JSON object. Only allowlisted options are applied (e.g. user-agent, proxy, format); exec and similar are ignored.</div>
                     </div>
                     <div>
                         <button is="emby-button" type="submit" class="raised button-submit block emby-button">

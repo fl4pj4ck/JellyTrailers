@@ -103,6 +103,30 @@
         "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.1.0/JellyTrailers_1.1.0.0_10.12.zip",
         "checksum": "",
         "timestamp": "2025-02-04T00:00:00Z"
+      },
+      {
+        "version": "1.1.2.0",
+        "changelog": "1.1.2: YtDlpOptionsJson allowlist — only safe option names (user-agent, proxy, format, etc.) are applied; exec and similar are ignored.",
+        "targetAbi": "10.10.0.0",
+        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.1.2/JellyTrailers_1.1.2.0.zip",
+        "checksum": "",
+        "timestamp": "2025-02-04T00:00:00Z"
+      },
+      {
+        "version": "1.1.2.0",
+        "changelog": "1.1.2: YtDlpOptionsJson allowlist — only safe option names (user-agent, proxy, format, etc.) are applied; exec and similar are ignored.",
+        "targetAbi": "10.11.0.0",
+        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.1.2/JellyTrailers_1.1.2.0_10.12.zip",
+        "checksum": "",
+        "timestamp": "2025-02-04T00:00:00Z"
+      },
+      {
+        "version": "1.1.2.0",
+        "changelog": "1.1.2: YtDlpOptionsJson allowlist — only safe option names (user-agent, proxy, format, etc.) are applied; exec and similar are ignored.",
+        "targetAbi": "10.12.0.0",
+        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.1.2/JellyTrailers_1.1.2.0_10.12.zip",
+        "checksum": "",
+        "timestamp": "2025-02-04T00:00:00Z"
       }
     ]
   }

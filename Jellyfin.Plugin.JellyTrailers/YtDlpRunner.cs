@@ -12,6 +12,21 @@ namespace Jellyfin.Plugin.JellyTrailers;
 /// </summary>
 public class YtDlpRunner
 {
+    /// <summary>
+    /// Option names (without leading --) that are safe to pass from YtDlpOptionsJson.
+    /// Excludes execution-related options (exec, postprocessor-args, etc.) to prevent command injection.
+    /// </summary>
+    private static readonly HashSet<string> AllowedYtDlpOptionNames = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "user-agent", "referer", "add-header", "proxy", "no-check-certificate",
+        "retries", "fragment-retries", "file-access-retries", "concurrent-fragments",
+        "sleep-interval", "sleep-requests", "throttle", "socket-timeout",
+        "source-address", "force-ipv4", "force-ipv6", "geo-bypass", "geo-verification-proxy",
+        "format", "merge-output-format", "prefer-free-formats", "no-playlist",
+        "cookies", "cookies-from-browser", "no-cookies-from-browser",
+        "no-warnings", "no-progress", "ignore-errors", "abort-on-error"
+    };
+
     private static readonly Dictionary<string, string> QualityFormat = new(StringComparer.OrdinalIgnoreCase)
     {
         ["best"] = "best",
@@ -210,7 +225,7 @@ public class YtDlpRunner
             url
         };
 
-        // Optional extra options from JSON
+        // Optional extra options from JSON (allowlisted names only to prevent e.g. --exec injection)
         if (!string.IsNullOrWhiteSpace(_config.YtDlpOptionsJson))
         {
             try
@@ -220,10 +235,17 @@ public class YtDlpRunner
                 {
                     foreach (var (k, v) in opts)
                     {
-                        var val = v.ValueKind == JsonValueKind.String ? v.GetString() : v.GetRawText();
-                        if (!string.IsNullOrEmpty(k) && val != null)
+                        var optName = (k ?? string.Empty).TrimStart('-');
+                        if (string.IsNullOrEmpty(optName)) continue;
+                        if (!AllowedYtDlpOptionNames.Contains(optName))
                         {
-                            args.Add("--" + k.TrimStart('-'));
+                            _logger.LogDebug("YtDlpOptionsJson: skipping disallowed option \"{Option}\". Only allowlisted options are applied.", optName);
+                            continue;
+                        }
+                        var val = v.ValueKind == JsonValueKind.String ? v.GetString() : v.GetRawText();
+                        if (val != null)
+                        {
+                            args.Add("--" + optName);
                             args.Add(val);
                         }
                     }
