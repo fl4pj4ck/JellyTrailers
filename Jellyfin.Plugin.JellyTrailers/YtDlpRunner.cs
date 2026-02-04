@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Text.Json;
 using Jellyfin.Plugin.JellyTrailers.Configuration;
 using MediaBrowser.Common.Configuration;
+using Microsoft.Extensions.Http;
 using Microsoft.Extensions.Logging;
 
 namespace Jellyfin.Plugin.JellyTrailers;
@@ -22,6 +23,7 @@ public class YtDlpRunner
     private readonly PluginConfiguration _config;
     private readonly IApplicationPaths? _applicationPaths;
     private readonly ILogger _logger;
+    private readonly IHttpClientFactory? _httpClientFactory;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="YtDlpRunner"/> class.
@@ -29,7 +31,7 @@ public class YtDlpRunner
     /// <param name="config">Plugin configuration.</param>
     /// <param name="logger">Logger instance.</param>
     public YtDlpRunner(PluginConfiguration config, ILogger<YtDlpRunner> logger)
-        : this(config, null, logger)
+        : this(config, null, logger, null)
     {
     }
 
@@ -40,10 +42,23 @@ public class YtDlpRunner
     /// <param name="applicationPaths">Application paths (optional, for plugin-managed yt-dlp).</param>
     /// <param name="logger">Logger instance.</param>
     public YtDlpRunner(PluginConfiguration config, IApplicationPaths? applicationPaths, ILogger<YtDlpRunner> logger)
+        : this(config, applicationPaths, logger, null)
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="YtDlpRunner"/> class.
+    /// </summary>
+    /// <param name="config">Plugin configuration.</param>
+    /// <param name="applicationPaths">Application paths (optional, for plugin-managed yt-dlp).</param>
+    /// <param name="logger">Logger instance.</param>
+    /// <param name="httpClientFactory">Optional HTTP client factory for yt-dlp binary download (preferred when available from host DI).</param>
+    public YtDlpRunner(PluginConfiguration config, IApplicationPaths? applicationPaths, ILogger<YtDlpRunner> logger, IHttpClientFactory? httpClientFactory)
     {
         _config = config;
         _applicationPaths = applicationPaths;
         _logger = logger;
+        _httpClientFactory = httpClientFactory;
     }
 
     /// <summary>
@@ -85,7 +100,7 @@ public class YtDlpRunner
             return bundledPath;
 
         _logger.LogInformation("yt-dlp not found; downloading to {Path}", bundledPath);
-        var (_, success) = await YtDlpDownloadHelper.DownloadToPluginDirAsync(_applicationPaths, _logger, cancellationToken).ConfigureAwait(false);
+        var (_, success) = await YtDlpDownloadHelper.DownloadToPluginDirAsync(_applicationPaths, _logger, cancellationToken, _httpClientFactory).ConfigureAwait(false);
         return bundledPath; // Caller will try to run; if !success we get a clear error
     }
 

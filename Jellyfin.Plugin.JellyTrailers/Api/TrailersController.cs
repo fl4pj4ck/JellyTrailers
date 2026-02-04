@@ -8,6 +8,7 @@ using MediaBrowser.Common.Configuration;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Http;
 using Microsoft.Extensions.Logging;
 
 namespace Jellyfin.Plugin.JellyTrailers.Api;
@@ -24,6 +25,7 @@ public class JellyTrailersController : ControllerBase
     private readonly IApplicationPaths _applicationPaths;
     private readonly ILogger<JellyTrailersController> _logger;
     private readonly ILoggerFactory _loggerFactory;
+    private readonly IHttpClientFactory _httpClientFactory;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="JellyTrailersController"/> class.
@@ -31,11 +33,13 @@ public class JellyTrailersController : ControllerBase
     /// <param name="applicationPaths">Application paths.</param>
     /// <param name="logger">Logger instance.</param>
     /// <param name="loggerFactory">Logger factory.</param>
-    public JellyTrailersController(IApplicationPaths applicationPaths, ILogger<JellyTrailersController> logger, ILoggerFactory loggerFactory)
+    /// <param name="httpClientFactory">HTTP client factory for yt-dlp binary download.</param>
+    public JellyTrailersController(IApplicationPaths applicationPaths, ILogger<JellyTrailersController> logger, ILoggerFactory loggerFactory, IHttpClientFactory httpClientFactory)
     {
         _applicationPaths = applicationPaths;
         _logger = logger;
         _loggerFactory = loggerFactory;
+        _httpClientFactory = httpClientFactory;
     }
 
     /// <summary>
@@ -71,7 +75,7 @@ public class JellyTrailersController : ControllerBase
             return Ok(new YtDlpCheckResult { Available = false, Message = "Plugin not initialized." });
         }
 
-        var runner = new YtDlpRunner(config, _applicationPaths, _loggerFactory.CreateLogger<YtDlpRunner>());
+        var runner = new YtDlpRunner(config, _applicationPaths, _loggerFactory.CreateLogger<YtDlpRunner>(), _httpClientFactory);
         var (available, message) = await runner.CheckAvailableAsync(cancellationToken).ConfigureAwait(false);
         return Ok(new YtDlpCheckResult { Available = available, Message = message });
     }
@@ -87,7 +91,7 @@ public class JellyTrailersController : ControllerBase
     public async Task<ActionResult<YtDlpDownloadResult>> DownloadYtDlp(CancellationToken cancellationToken)
     {
         var targetPath = YtDlpDownloadHelper.GetBundledExePath(_applicationPaths);
-        var (path, success) = await YtDlpDownloadHelper.DownloadToPluginDirAsync(_applicationPaths, _logger, cancellationToken).ConfigureAwait(false);
+        var (path, success) = await YtDlpDownloadHelper.DownloadToPluginDirAsync(_applicationPaths, _logger, cancellationToken, _httpClientFactory).ConfigureAwait(false);
         if (success)
             return Ok(new YtDlpDownloadResult { Success = true, Path = path, Message = "Downloaded successfully. Leave the path empty in settings to use this copy." });
         return Ok(new YtDlpDownloadResult { Success = false, Path = targetPath, Message = "Download failed. Check Jellyfin logs for details." });

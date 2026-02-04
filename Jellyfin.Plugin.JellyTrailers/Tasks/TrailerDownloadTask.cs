@@ -7,6 +7,7 @@ using MediaBrowser.Common.Configuration;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Plugins;
 using MediaBrowser.Model.Tasks;
+using Microsoft.Extensions.Http;
 using Microsoft.Extensions.Logging;
 
 namespace Jellyfin.Plugin.JellyTrailers.Tasks;
@@ -20,17 +21,20 @@ public class TrailerDownloadTask : IScheduledTask
     private readonly ILogger<TrailerDownloadTask> _logger;
     private readonly ILoggerFactory _loggerFactory;
     private readonly IApplicationPaths _applicationPaths;
+    private readonly IHttpClientFactory _httpClientFactory;
 
     public TrailerDownloadTask(
         ILibraryManager libraryManager,
         ILogger<TrailerDownloadTask> logger,
         ILoggerFactory loggerFactory,
-        IApplicationPaths applicationPaths)
+        IApplicationPaths applicationPaths,
+        IHttpClientFactory httpClientFactory)
     {
         _libraryManager = libraryManager;
         _logger = logger;
         _loggerFactory = loggerFactory;
         _applicationPaths = applicationPaths;
+        _httpClientFactory = httpClientFactory;
     }
 
     /// <inheritdoc />
@@ -57,7 +61,7 @@ public class TrailerDownloadTask : IScheduledTask
         var config = Plugin.Instance.Configuration;
         var scanner = new LibraryScanner(_libraryManager, _loggerFactory.CreateLogger<LibraryScanner>());
         var statsStore = new TrailerStatsStore(_applicationPaths, _loggerFactory.CreateLogger<TrailerStatsStore>());
-        var ytDlp = new YtDlpRunner(config, _applicationPaths, _loggerFactory.CreateLogger<YtDlpRunner>());
+        var ytDlp = new YtDlpRunner(config, _applicationPaths, _loggerFactory.CreateLogger<YtDlpRunner>(), _httpClientFactory);
 
         // 1. Get library roots and scan filesystem (no persistent list; order by folder mtime so newer items first)
         var roots = scanner.GetLibraryRoots();

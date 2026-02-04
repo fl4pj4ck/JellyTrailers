@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using MediaBrowser.Common.Configuration;
+using Microsoft.Extensions.Http;
 using Microsoft.Extensions.Logging;
 
 namespace Jellyfin.Plugin.JellyTrailers;
@@ -41,10 +42,15 @@ public static class YtDlpDownloadHelper
     /// Downloads the yt-dlp binary for the current OS into the plugin data folder.
     /// Returns (targetPath, true) on success, (targetPath, false) on failure.
     /// </summary>
+    /// <param name="applicationPaths">Application paths.</param>
+    /// <param name="logger">Logger instance.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <param name="httpClientFactory">Optional HTTP client factory (preferred when available from host DI).</param>
     public static async Task<(string Path, bool Success)> DownloadToPluginDirAsync(
         IApplicationPaths applicationPaths,
         ILogger logger,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        IHttpClientFactory? httpClientFactory = null)
     {
         var dataDir = Path.Combine(applicationPaths.PluginConfigurationsPath, "JellyTrailers");
         var (fileName, urlFileName) = GetPlatformNames();
@@ -54,7 +60,9 @@ public static class YtDlpDownloadHelper
         try
         {
             Directory.CreateDirectory(dataDir);
-            using var client = new HttpClient();
+            using var client = httpClientFactory != null
+                ? httpClientFactory.CreateClient()
+                : new HttpClient();
             client.Timeout = TimeSpan.FromMinutes(2);
             client.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", "Jellyfin-JellyTrailers-Plugin/1.0");
             byte[] bytes = await client.GetByteArrayAsync(new Uri(url), cancellationToken).ConfigureAwait(false);
