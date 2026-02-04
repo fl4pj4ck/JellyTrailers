@@ -94,26 +94,25 @@ if [[ "$NOW" -eq 0 ]]; then
 fi
 echo "Prerequisites OK (dotnet: $(dotnet --version)$( [[ "$NOW" -eq 0 ]] && echo ", podman: $(podman --version 2>/dev/null || echo 'ok')" ))."
 
-# --- -now: build and create release zip only ---
+# --- -now: build and create release zips (net8.0 + net9.0 for 10.10 and 10.12) ---
 if [[ "$NOW" -eq 1 ]]; then
-  echo "Building $PLUGIN_NAME for release (net8.0)..."
+  echo "Building $PLUGIN_NAME for release (net8.0 + net9.0)..."
   dotnet build Jellyfin.Plugin.JellyTrailers.sln -c Release -v q
   OUT_NET8="$BUILD_DIR/net8.0"
-  if [[ ! -f "$OUT_NET8/$PLUGIN_NAME.dll" ]]; then
-    echo "Error: Build output not found: $OUT_NET8/$PLUGIN_NAME.dll" >&2
-    exit 1
-  fi
-  # Zip filename from manifest.json (first version's sourceUrl basename)
-  if command -v jq &>/dev/null; then
-    ZIP_NAME=$(jq -r '.[0].versions[0].sourceUrl | split("/") | last' manifest.json 2>/dev/null)
-  fi
-  if [[ -z "${ZIP_NAME:-}" || "$ZIP_NAME" == "null" ]]; then
-    ZIP_NAME="JellyTrailers_1.0.0.0.zip"
-  fi
-  ZIP_PATH="$SCRIPT_DIR/$ZIP_NAME"
-  ( cd "$OUT_NET8" && zip -r "$ZIP_PATH" . -q )
-  echo "Created: $ZIP_PATH"
-  echo "Next: create a GitHub release with tag v1.0.0 (or the version in manifest.json), attach $ZIP_NAME, publish."
+  OUT_NET9="$BUILD_DIR/net9.0"
+  for dir in "$OUT_NET8" "$OUT_NET9"; do
+    if [[ ! -f "$dir/$PLUGIN_NAME.dll" ]]; then
+      echo "Error: Build output not found: $dir/$PLUGIN_NAME.dll" >&2
+      exit 1
+    fi
+  done
+  ZIP_10_10="JellyTrailers_1.0.0.0.zip"
+  ZIP_10_12="JellyTrailers_1.0.0.0_10.12.zip"
+  ( cd "$OUT_NET8" && zip -r "$SCRIPT_DIR/$ZIP_10_10" . -q )
+  ( cd "$OUT_NET9" && zip -r "$SCRIPT_DIR/$ZIP_10_12" . -q )
+  echo "Created: $SCRIPT_DIR/$ZIP_10_10 (10.10.x)"
+  echo "Created: $SCRIPT_DIR/$ZIP_10_12 (10.11/10.12)"
+  echo "Next: create a GitHub release with tag v1.0.0, attach both $ZIP_10_10 and $ZIP_10_12, publish."
   exit 0
 fi
 
