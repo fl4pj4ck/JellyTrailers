@@ -31,6 +31,8 @@ public static class TitleParser
     /// Strip release/codec/source junk from a title so YouTube search gets a short show/movie name.
     /// e.g. "Baby.Bandito.MULTi.1080p.NF.WEB-DL" -> "Baby Bandito"
     /// </summary>
+    /// <param name="title">Raw title or folder name.</param>
+    /// <returns>Cleaned title suitable for search (e.g. "Baby Bandito").</returns>
     public static string CleanTitleForSearch(string title)
     {
         if (string.IsNullOrWhiteSpace(title)) return title ?? string.Empty;
@@ -64,6 +66,8 @@ public static class TitleParser
     /// <summary>
     /// Parse movie folder name into title and optional year.
     /// </summary>
+    /// <param name="pathOrBasename">Folder path or basename (e.g. "Movie.Name.2024.1080p").</param>
+    /// <returns>Title and optional year (1880–2030).</returns>
     public static (string Title, int? Year) ParseMovie(string pathOrBasename)
     {
         var basename = Path.GetFileName(pathOrBasename.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar))
@@ -88,6 +92,8 @@ public static class TitleParser
     /// Structure 1: .../ShowName/S01 → title from ShowName, season from S01.
     /// Structure 2: Show.Name.S01.1080p... → title and season from basename.
     /// </summary>
+    /// <param name="pathOrBasename">Folder path or basename.</param>
+    /// <returns>Title, optional season number, optional year.</returns>
     public static (string Title, int? Season, int? Year) ParseTvShow(string pathOrBasename)
     {
         var path = pathOrBasename.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
@@ -117,6 +123,12 @@ public static class TitleParser
     /// Build YouTube search query for a trailer (movie or TV).
     /// Uses CleanTitleForSearch so we search e.g. "Baby Bandito trailer" not the full release name.
     /// </summary>
+    /// <param name="type">"movie" or "tvshow".</param>
+    /// <param name="path">Folder path (fallback for title).</param>
+    /// <param name="title">Parsed title (optional).</param>
+    /// <param name="year">Year (movies).</param>
+    /// <param name="season">Season number (TV).</param>
+    /// <returns>Search query string (e.g. "Movie Name 2024 trailer").</returns>
     public static string BuildSearchQuery(string type, string path, string? title, int? year, int? season)
     {
         var rawTitle = title ?? Path.GetFileName(path) ?? "Unknown";

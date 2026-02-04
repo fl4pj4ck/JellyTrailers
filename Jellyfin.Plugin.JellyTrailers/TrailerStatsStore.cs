@@ -32,6 +32,8 @@ public class TrailerStatsStore
     /// <summary>
     /// Record folder counts from the last library scan (total folders and how many already have a trailer).
     /// </summary>
+    /// <param name="totalFolders">Total library folders scanned.</param>
+    /// <param name="foldersWithTrailer">Number of folders that already have a trailer file.</param>
     public void RecordFolderCounts(int totalFolders, int foldersWithTrailer)
     {
         lock (Lock)
@@ -46,6 +48,8 @@ public class TrailerStatsStore
     /// <summary>
     /// Record a run: add to totals and append to run history (trimmed to last 365 days).
     /// </summary>
+    /// <param name="downloaded">Number of trailers downloaded this run.</param>
+    /// <param name="failed">Number of failed downloads this run.</param>
     public void RecordRun(int downloaded, int failed)
     {
         RecordProgress(downloaded, failed);
@@ -55,6 +59,8 @@ public class TrailerStatsStore
     /// Record or update progress for today's run so the stats page updates during the task.
     /// If the last run is from today, update it in place; otherwise add a new run.
     /// </summary>
+    /// <param name="downloaded">Number of trailers downloaded so far.</param>
+    /// <param name="failed">Number of failed downloads so far.</param>
     public void RecordProgress(int downloaded, int failed)
     {
         lock (Lock)
@@ -101,6 +107,7 @@ public class TrailerStatsStore
     /// Get aggregated stats for display.
     /// TotalDownloaded is at least FoldersWithTrailer so the UI reflects trailers on disk when run history was reset or is missing.
     /// </summary>
+    /// <returns>Aggregated trailer stats for the settings page.</returns>
     public TrailerStats GetStats()
     {
         lock (Lock)

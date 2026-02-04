@@ -47,6 +47,7 @@ public class PluginConfiguration : BasePluginConfiguration
     /// Returns the trailer filename to use (non-null, trimmed); defaults to "trailer.mp4" if not set.
     /// Rejects paths containing ".." or absolute paths to prevent writing outside library folders.
     /// </summary>
+    /// <returns>Safe relative trailer path, e.g. "trailer.mp4".</returns>
     public string GetEffectiveTrailerPath()
     {
         var path = string.IsNullOrWhiteSpace(TrailerPath) ? "trailer.mp4" : TrailerPath.Trim();

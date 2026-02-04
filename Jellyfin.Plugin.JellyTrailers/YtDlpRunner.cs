@@ -23,11 +23,22 @@ public class YtDlpRunner
     private readonly IApplicationPaths? _applicationPaths;
     private readonly ILogger _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="YtDlpRunner"/> class.
+    /// </summary>
+    /// <param name="config">Plugin configuration.</param>
+    /// <param name="logger">Logger instance.</param>
     public YtDlpRunner(PluginConfiguration config, ILogger<YtDlpRunner> logger)
         : this(config, null, logger)
     {
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="YtDlpRunner"/> class.
+    /// </summary>
+    /// <param name="config">Plugin configuration.</param>
+    /// <param name="applicationPaths">Application paths (optional, for plugin-managed yt-dlp).</param>
+    /// <param name="logger">Logger instance.</param>
     public YtDlpRunner(PluginConfiguration config, IApplicationPaths? applicationPaths, ILogger<YtDlpRunner> logger)
     {
         _config = config;
@@ -35,6 +46,10 @@ public class YtDlpRunner
         _logger = logger;
     }
 
+    /// <summary>
+    /// Gets the yt-dlp format string for the configured quality.
+    /// </summary>
+    /// <returns>Format string for yt-dlp -f (e.g. best[height&lt;=720]).</returns>
     public string GetFormatForQuality()
     {
         var q = (_config.Quality ?? "720p").Trim();
@@ -78,6 +93,8 @@ public class YtDlpRunner
     /// Check if the configured yt-dlp executable runs (e.g. for settings page). Returns (true, version) or (false, error message).
     /// Auto-downloads the plugin-managed copy if config path is empty and bundled copy is missing.
     /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>True if available with version message; false with error message.</returns>
     public async Task<(bool Available, string Message)> CheckAvailableAsync(CancellationToken cancellationToken = default)
     {
         var exe = await GetEffectiveExePathAsync(cancellationToken).ConfigureAwait(false);
@@ -155,6 +172,10 @@ public class YtDlpRunner
     /// Run yt-dlp for one trailer. Returns true if the output file exists after run.
     /// Auto-downloads the plugin-managed copy if config path is empty and bundled copy is missing.
     /// </summary>
+    /// <param name="entry">Library entry (movie or TV season folder).</param>
+    /// <param name="outputPath">Full path for the output trailer file.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>True if the trailer was downloaded and the file exists.</returns>
     public async Task<bool> DownloadOneAsync(
         DownloadListEntry entry,
         string outputPath,

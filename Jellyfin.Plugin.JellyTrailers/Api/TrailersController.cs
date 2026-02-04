@@ -22,6 +22,12 @@ public class JellyTrailersController : ControllerBase
     private readonly ILogger<JellyTrailersController> _logger;
     private readonly ILoggerFactory _loggerFactory;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="JellyTrailersController"/> class.
+    /// </summary>
+    /// <param name="applicationPaths">Application paths.</param>
+    /// <param name="logger">Logger instance.</param>
+    /// <param name="loggerFactory">Logger factory.</param>
     public JellyTrailersController(IApplicationPaths applicationPaths, ILogger<JellyTrailersController> logger, ILoggerFactory loggerFactory)
     {
         _applicationPaths = applicationPaths;
@@ -29,6 +35,11 @@ public class JellyTrailersController : ControllerBase
         _loggerFactory = loggerFactory;
     }
 
+    /// <summary>
+    /// Gets a short message from an exception for API responses.
+    /// </summary>
+    /// <param name="ex">The exception.</param>
+    /// <returns>Exception message or type name.</returns>
     private static string GetExceptionMessage(Exception ex)
     {
         if (ex == null) return string.Empty;
@@ -45,6 +56,8 @@ public class JellyTrailersController : ControllerBase
     /// <summary>
     /// Check if yt-dlp is available with the current plugin configuration (for settings page warning).
     /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Availability and version or error message.</returns>
     [HttpGet("YtDlpCheck")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<ActionResult<YtDlpCheckResult>> GetYtDlpCheck(CancellationToken cancellationToken)
@@ -63,6 +76,8 @@ public class JellyTrailersController : ControllerBase
     /// <summary>
     /// Download yt-dlp binary into plugin data folder (manual trigger from settings page).
     /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>Download result with path and success status.</returns>
     [HttpPost("YtDlpDownload")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -78,6 +93,7 @@ public class JellyTrailersController : ControllerBase
     /// <summary>
     /// Get trailer download stats for the settings page.
     /// </summary>
+    /// <returns>Aggregated trailer stats.</returns>
     [HttpGet("Stats")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public ActionResult<TrailerStats> GetStats()
@@ -98,6 +114,7 @@ public class JellyTrailersController : ControllerBase
     /// <summary>
     /// Reset trailer download stats (totals and run history).
     /// </summary>
+    /// <returns>204 No Content on success.</returns>
     [HttpPost("Stats/Reset")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
