@@ -14,9 +14,9 @@
 #
 #   -remove   Remove both Jellyfin.Plugin.Trailers and Jellyfin.Plugin.JellyTrailers from
 #             the container's plugins folder and exit (no build, no install).
-#   -now      Build the plugin and create the release zip (name from manifest.json).
-#             Output: ./JellyTrailers_<version>.zip at repo root. No container copy.
-#             Then create a GitHub release, tag vX.Y.Z, and attach the zip.
+#   -now      Build the plugin, create zips in releases/, and create a GitHub release if the
+#             version (from manifest.json last .versions[] entry) does not yet have a release.
+#             Requires: jq, gh (GitHub CLI). No container copy.
 #   CONTAINER: Podman container name or ID (default: $JELLYFIN_CONTAINER or "jellyfin")
 #
 #   Optional env:
@@ -96,7 +96,20 @@ echo "Prerequisites OK (dotnet: $(dotnet --version)$( [[ "$NOW" -eq 0 ]] && echo
 
 # --- -now: build and create release zips (net8.0 + net9.0 for 10.10 and 10.12) ---
 if [[ "$NOW" -eq 1 ]]; then
-  echo "Building $PLUGIN_NAME for release (net8.0 + net9.0)..."
+  MANIFEST_JSON="$SCRIPT_DIR/manifest.json"
+  if [[ ! -f "$MANIFEST_JSON" ]]; then
+    echo "Error: manifest.json not found at $MANIFEST_JSON" >&2
+    exit 1
+  fi
+  PLUGIN_VERSION=$(jq -r '.[0].versions[-1].version' "$MANIFEST_JSON" 2>/dev/null)
+  if [[ -z "$PLUGIN_VERSION" || "$PLUGIN_VERSION" == "null" ]]; then
+    echo "Error: Could not read version from manifest.json (last entry in .versions). Install jq or fix manifest." >&2
+    exit 1
+  fi
+  # Git tag: 1.0.1.0 -> v1.0.1 (drop trailing .0)
+  RELEASE_TAG="v${PLUGIN_VERSION%.0}"
+
+  echo "Building $PLUGIN_NAME for release (net8.0 + net9.0) — version $PLUGIN_VERSION from manifest..."
   dotnet build Jellyfin.Plugin.JellyTrailers.sln -c Release -v q
   OUT_NET8="$BUILD_DIR/net8.0"
   OUT_NET9="$BUILD_DIR/net9.0"
@@ -106,13 +119,40 @@ if [[ "$NOW" -eq 1 ]]; then
       exit 1
     fi
   done
-  ZIP_10_10="JellyTrailers_1.0.0.0.zip"
-  ZIP_10_12="JellyTrailers_1.0.0.0_10.12.zip"
-  ( cd "$OUT_NET8" && zip -r "$SCRIPT_DIR/$ZIP_10_10" . -q )
-  ( cd "$OUT_NET9" && zip -r "$SCRIPT_DIR/$ZIP_10_12" . -q )
-  echo "Created: $SCRIPT_DIR/$ZIP_10_10 (10.10.x)"
-  echo "Created: $SCRIPT_DIR/$ZIP_10_12 (10.11/10.12)"
-  echo "Next: create a GitHub release with tag v1.0.0, attach both $ZIP_10_10 and $ZIP_10_12, publish."
+  RELEASES_DIR="$SCRIPT_DIR/releases"
+  mkdir -p "$RELEASES_DIR"
+  ZIP_10_10="JellyTrailers_${PLUGIN_VERSION}.zip"
+  ZIP_10_12="JellyTrailers_${PLUGIN_VERSION}_10.12.zip"
+  ( cd "$OUT_NET8" && zip -r "$RELEASES_DIR/$ZIP_10_10" . -q )
+  ( cd "$OUT_NET9" && zip -r "$RELEASES_DIR/$ZIP_10_12" . -q )
+  echo "Created: $RELEASES_DIR/$ZIP_10_10 (10.10.x)"
+  echo "Created: $RELEASES_DIR/$ZIP_10_12 (10.11/10.12)"
+
+  # Commit and push before creating release (zips are gitignored)
+  git add .
+  if ! git diff --staged --quiet 2>/dev/null; then
+    git commit -m "Release $RELEASE_TAG"
+  fi
+  git push
+
+  # Create GitHub release if this version does not have one yet (requires gh)
+  if command -v gh &>/dev/null; then
+    if gh release view "$RELEASE_TAG" &>/dev/null; then
+      echo "Release $RELEASE_TAG already exists; zips are in releases/. Up version in manifest.json and re-run to publish a new release."
+    else
+      RELEASE_NOTES=$(jq -r '.[0].versions[-1].changelog' "$MANIFEST_JSON" 2>/dev/null)
+      [[ -z "$RELEASE_NOTES" || "$RELEASE_NOTES" == "null" ]] && RELEASE_NOTES="Release $RELEASE_TAG"
+      echo "Creating GitHub release $RELEASE_TAG..."
+      gh release create "$RELEASE_TAG" \
+        "$RELEASES_DIR/$ZIP_10_10" \
+        "$RELEASES_DIR/$ZIP_10_12" \
+        --title "$RELEASE_TAG" \
+        --notes "$RELEASE_NOTES"
+      echo "Done. Release: $(gh release view "$RELEASE_TAG" --json url -q .url 2>/dev/null || echo "$RELEASE_TAG")"
+    fi
+  else
+    echo "Install gh (GitHub CLI) and re-run to create release $RELEASE_TAG automatically. Or create it manually and attach the zips from releases/."
+  fi
   exit 0
 fi
 
@@ -240,6 +280,26 @@ fi
 if [[ ! -f "$OUTPUT_DIR/$PLUGIN_NAME.dll" ]]; then
   echo "Error: Build output not found: $OUTPUT_DIR/$PLUGIN_NAME.dll" >&2
   exit 1
+fi
+
+# --- Zips into releases/ (version from manifest) ---
+RELEASES_DIR="$SCRIPT_DIR/releases"
+MANIFEST_JSON="$SCRIPT_DIR/manifest.json"
+PLUGIN_VERSION=$(jq -r '.[0].versions[-1].version' "$MANIFEST_JSON" 2>/dev/null)
+if [[ -n "$PLUGIN_VERSION" && "$PLUGIN_VERSION" != "null" ]]; then
+  mkdir -p "$RELEASES_DIR"
+  if [[ -f "$BUILD_DIR/net8.0/$PLUGIN_NAME.dll" ]]; then
+    ZIP_10_10="JellyTrailers_${PLUGIN_VERSION}.zip"
+    ( cd "$BUILD_DIR/net8.0" && zip -r "$RELEASES_DIR/$ZIP_10_10" . -q )
+    echo "Created: $RELEASES_DIR/$ZIP_10_10"
+  fi
+  if [[ -f "$BUILD_DIR/net9.0/$PLUGIN_NAME.dll" ]]; then
+    ZIP_10_12="JellyTrailers_${PLUGIN_VERSION}_10.12.zip"
+    ( cd "$BUILD_DIR/net9.0" && zip -r "$RELEASES_DIR/$ZIP_10_12" . -q )
+    echo "Created: $RELEASES_DIR/$ZIP_10_12"
+  fi
+else
+  echo "Skipping release zips (could not read version from manifest.json; need jq?)."
 fi
 
 # --- Copy into container ---

@@ -43,15 +43,13 @@ dotnet build Jellyfin.Plugin.JellyTrailers.sln -c Release
    dotnet build Jellyfin.Plugin.JellyTrailers.sln -c Release
    ```
 
-2. **Zip** the build output. The zip must be named exactly as in [manifest.json](manifest.json) (e.g. `JellyTrailers_1.0.0.0.zip`). From the repo root:
+2. **Build and release** from the repo root:
    ```bash
-   cd Jellyfin.Plugin.JellyTrailers/bin/Release/net8.0
-   zip -r ../../../../../JellyTrailers_1.0.0.0.zip .
-   cd ../../../../..
+   ./build.sh -now
    ```
-   Or on Windows (PowerShell): zip the *contents* of `Jellyfin.Plugin.JellyTrailers\bin\Release\net8.0\` into `JellyTrailers_1.0.0.0.zip`.
+   This reads the version from the **last entry** in [manifest.json](manifest.json) `versions`, builds net8.0 + net9.0, creates zips in `releases/`, and **creates a GitHub release** for that version if it doesn’t exist yet (tag and release notes from manifest). Requires `jq` and `gh` (GitHub CLI). If the release already exists, it only rebuilds the zips.
 
-3. **Create a GitHub release**: Repo → **Releases** → **Create a new release**. Choose tag **v1.0.0** (create the tag if it doesn’t exist), add release notes, then **Attach** the zip file `JellyTrailers_1.0.0.0.zip`. Publish.
+   Or create the release manually: run the build/zip step, then Repo → **Releases** → **Create a new release**, use the tag (e.g. **v1.0.1**), attach the zips from `releases/`.
 
 After that, the manifest URL in the README will point to a working catalog and the version’s `sourceUrl` will download this zip. If you add a new version, add an entry to `manifest.json` and publish a new release with a matching zip name.
 
@@ -59,6 +57,7 @@ After that, the manifest URL in the README will point to a working catalog and t
 
 - `Jellyfin.Plugin.JellyTrailers/` – plugin source (C#).
 - `assets/` – plugin tile/logo image; catalog manifest `imageUrl` points here (public URL).
+- `releases/` – release zips from `./build.sh -now` (zips are gitignored).
 - `build.sh` – build and optionally copy into a Podman container (`-remove` to uninstall only).
 - `build.yaml` – plugin metadata for catalog/release tooling.
 

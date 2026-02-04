@@ -64,3 +64,5 @@ download_list.json
 *.pdb
 *.nupkg
 JellyTrailers_*.zip
+releases/*.zip
+ANALYSIS.md

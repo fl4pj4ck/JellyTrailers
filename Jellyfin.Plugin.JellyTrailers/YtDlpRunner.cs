@@ -90,7 +90,7 @@ public class YtDlpRunner
         {
             FileName = exe,
             Arguments = "--version",
-            WorkingDirectory = "/tmp",
+            WorkingDirectory = Path.GetTempPath(),
             UseShellExecute = false,
             CreateNoWindow = true,
             RedirectStandardOutput = true,
@@ -209,7 +209,7 @@ public class YtDlpRunner
         var startInfo = new ProcessStartInfo
         {
             FileName = exe,
-            WorkingDirectory = "/tmp",
+            WorkingDirectory = Path.GetTempPath(),
             UseShellExecute = false,
             CreateNoWindow = true,
             RedirectStandardOutput = true,
