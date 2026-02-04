@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using MediaBrowser.Model.Plugins;
 
 namespace Jellyfin.Plugin.JellyTrailers.Configuration;
@@ -7,6 +8,16 @@ namespace Jellyfin.Plugin.JellyTrailers.Configuration;
 /// </summary>
 public class PluginConfiguration : BasePluginConfiguration
 {
+    /// <summary>
+    /// Comma-separated library names to include (empty = all movie/TV libraries).
+    /// </summary>
+    public string IncludeLibraryNames { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Comma-separated library names to exclude.
+    /// </summary>
+    public string ExcludeLibraryNames { get; set; } = string.Empty;
+
     /// <summary>
     /// Path to the yt-dlp executable. Leave empty to use the plugin-managed copy (downloaded automatically to the plugin data folder).
     /// Set a path (e.g. "/usr/local/bin/yt-dlp" or "yt-dlp") to use an existing installation.
@@ -62,5 +73,33 @@ public class PluginConfiguration : BasePluginConfiguration
         if (path.Contains("..", StringComparison.Ordinal) || Path.IsPathRooted(path))
             return "trailer.mp4";
         return path;
+    }
+
+    /// <summary>
+    /// Parses <see cref="IncludeLibraryNames"/> into a set of trimmed, non-empty names (case-insensitive).
+    /// Empty set means "no filter" (include all).
+    /// </summary>
+    public HashSet<string> GetIncludeLibraryNamesSet()
+    {
+        return ParseLibraryNamesCsv(IncludeLibraryNames);
+    }
+
+    /// <summary>
+    /// Parses <see cref="ExcludeLibraryNames"/> into a set of trimmed, non-empty names (case-insensitive).
+    /// </summary>
+    public HashSet<string> GetExcludeLibraryNamesSet()
+    {
+        return ParseLibraryNamesCsv(ExcludeLibraryNames);
+    }
+
+    private static HashSet<string> ParseLibraryNamesCsv(string csv)
+    {
+        var set = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        if (string.IsNullOrWhiteSpace(csv)) return set;
+        foreach (var part in csv.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            if (part.Length > 0) set.Add(part);
+        }
+        return set;
     }
 }

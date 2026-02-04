@@ -60,7 +60,11 @@ public class TrailerDownloadTask : IScheduledTask
         var ytDlp = new YtDlpRunner(_config, _applicationPaths, _loggerFactory.CreateLogger<YtDlpRunner>(), _httpClientFactory);
 
         // 1. Get library roots and scan filesystem (no persistent list; order by folder mtime so newer items first)
-        var roots = scanner.GetLibraryRoots();
+        var includeNames = _config.GetIncludeLibraryNamesSet();
+        var excludeNames = _config.GetExcludeLibraryNamesSet();
+        var roots = scanner.GetLibraryRoots(
+            includeNames.Count > 0 ? includeNames : null,
+            excludeNames.Count > 0 ? excludeNames : null);
         if (roots.Count == 0)
         {
             _logger.LogInformation("No movie or TV libraries found; nothing to do.");

@@ -48,7 +48,11 @@ public class RemoveAllTrailersTask : IScheduledTask
         var trailerPath = _config.GetEffectiveTrailerPath();
         var scanner = new LibraryScanner(_libraryManager, _loggerFactory.CreateLogger<LibraryScanner>());
 
-        var roots = scanner.GetLibraryRoots();
+        var includeNames = _config.GetIncludeLibraryNamesSet();
+        var excludeNames = _config.GetExcludeLibraryNamesSet();
+        var roots = scanner.GetLibraryRoots(
+            includeNames.Count > 0 ? includeNames : null,
+            excludeNames.Count > 0 ? excludeNames : null);
         if (roots.Count == 0)
         {
             _logger.LogInformation("No movie or TV libraries found; nothing to do.");

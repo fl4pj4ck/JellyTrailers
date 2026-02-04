@@ -140,6 +140,20 @@
                     </div>
 
                     <div class="trailers-card" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 1.25rem; margin-bottom: 1.5rem;">
+                        <h3 style="margin: 0 0 1rem 0; font-size: 1rem; font-weight: 600; color: rgba(255,255,255,0.9);">Library selection</h3>
+                        <div class="inputContainer">
+                            <label class="inputLabel inputLabelUnfocused" for="IncludeLibraryNames">Include only these libraries</label>
+                            <input id="IncludeLibraryNames" name="IncludeLibraryNames" type="text" is="emby-input" placeholder="(empty = all)" />
+                            <div class="fieldDescription">Comma-separated library names to include (e.g. Movies, TV Shows). Leave empty to use all movie/TV libraries.</div>
+                        </div>
+                        <div class="inputContainer">
+                            <label class="inputLabel inputLabelUnfocused" for="ExcludeLibraryNames">Exclude these libraries</label>
+                            <input id="ExcludeLibraryNames" name="ExcludeLibraryNames" type="text" is="emby-input" placeholder="(none)" />
+                            <div class="fieldDescription">Comma-separated library names to exclude from trailer download and remove-all.</div>
+                        </div>
+                    </div>
+
+                    <div class="trailers-card" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 1.25rem; margin-bottom: 1.5rem;">
                         <h3 style="margin: 0 0 1rem 0; font-size: 1rem; font-weight: 600; color: rgba(255,255,255,0.9);">Schedule</h3>
                         <div class="checkboxContainer checkboxContainer-withDescription" style="margin-bottom: 1rem;">
                             <label class="emby-checkbox-label">
@@ -355,6 +369,8 @@
                     Dashboard.showLoadingMsg();
                     loadVersion();
                     ApiClient.getPluginConfiguration(pluginId).then(function(config) {
+                        document.querySelector('#IncludeLibraryNames').value = config.IncludeLibraryNames || '';
+                        document.querySelector('#ExcludeLibraryNames').value = config.ExcludeLibraryNames || '';
                         document.querySelector('#YtDlpPath').value = config.YtDlpPath || '';
                         document.querySelector('#TrailerPath').value = config.TrailerPath || 'trailer.mp4';
                         document.querySelector('#Quality').value = config.Quality || '720p';
@@ -403,6 +419,8 @@
                     e.preventDefault();
                     Dashboard.showLoadingMsg();
                     ApiClient.getPluginConfiguration(pluginId).then(function(config) {
+                        config.IncludeLibraryNames = (document.querySelector('#IncludeLibraryNames').value || '').trim();
+                        config.ExcludeLibraryNames = (document.querySelector('#ExcludeLibraryNames').value || '').trim();
                         config.YtDlpPath = (document.querySelector('#YtDlpPath').value || '').replace(/^["']|["']$/g, '').trim();
                         config.TrailerPath = document.querySelector('#TrailerPath').value || 'trailer.mp4';
                         config.Quality = document.querySelector('#Quality').value || '720p';

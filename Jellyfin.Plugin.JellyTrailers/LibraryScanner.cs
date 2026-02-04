@@ -24,9 +24,14 @@ public class LibraryScanner
     }
 
     /// <summary>
-    /// Get all library root paths grouped by content type (Movie, TvShow).
+    /// Get library root paths grouped by content type (Movie, TvShow), optionally filtered by library name.
     /// </summary>
-    public IReadOnlyList<(string Path, string Type)> GetLibraryRoots()
+    /// <param name="includeLibraryNames">If non-empty, only include roots whose library name is in this set (case-insensitive).</param>
+    /// <param name="excludeLibraryNames">Exclude roots whose library name is in this set (case-insensitive).</param>
+    /// <returns>List of (path, type) for each root.</returns>
+    public IReadOnlyList<(string Path, string Type)> GetLibraryRoots(
+        IReadOnlySet<string>? includeLibraryNames = null,
+        IReadOnlySet<string>? excludeLibraryNames = null)
     {
         var result = new List<(string Path, string Type)>();
         try
@@ -47,6 +52,12 @@ public class LibraryScanner
                 if (string.IsNullOrEmpty(type))
                     continue;
 
+                var libraryName = folder.Name?.Trim() ?? string.Empty;
+                if (includeLibraryNames != null && includeLibraryNames.Count > 0 && !includeLibraryNames.Contains(libraryName))
+                    continue;
+                if (excludeLibraryNames != null && excludeLibraryNames.Count > 0 && excludeLibraryNames.Contains(libraryName))
+                    continue;
+
                 if (folder.Locations == null)
                     continue;
 
@@ -58,7 +69,7 @@ public class LibraryScanner
                     if (System.IO.Directory.Exists(path))
                     {
                         result.Add((path, type));
-                        _logger.LogDebug("Library root: {Path} ({Type})", path, type);
+                        _logger.LogDebug("Library root: {Path} ({Type}, library: {Name})", path, type, libraryName);
                     }
                     else
                     {
