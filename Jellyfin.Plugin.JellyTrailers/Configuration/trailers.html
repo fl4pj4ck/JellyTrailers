@@ -109,8 +109,9 @@
         <div data-role="content">
             <div class="content-primary">
                 <form id="JellyTrailersConfigForm">
-                    <div class="sectionTitleContainer flex align-items-center">
+                    <div class="sectionTitleContainer flex align-items-center" style="flex-wrap: wrap; gap: 0.5rem;">
                         <h2 class="sectionTitle">JellyTrailers</h2>
+                        <span id="JellyTrailersVersion" style="font-size: 0.875rem; font-weight: normal; color: rgba(255,255,255,0.55); align-self: center;"></span>
                     </div>
                     <p class="trailers-intro" style="color: rgba(255,255,255,0.75); font-size: 0.9rem; line-height: 1.5; margin-bottom: 1.5rem;">Download movie and TV show trailers with yt-dlp and place them next to your media. Run the scheduled task &quot;Download Trailers&quot; manually in Dashboard → Scheduled Tasks, or set a schedule below.</p>
 
@@ -343,8 +344,16 @@
 
                 var statsPollInterval;
 
+                function loadVersion() {
+                    ApiClient.getJSON(ApiClient.getUrl('Plugins/JellyTrailers/Version') + '?t=' + Date.now()).then(function(r) {
+                        var el = document.getElementById('JellyTrailersVersion');
+                        if (el && r && r.Version) el.textContent = 'Version ' + r.Version;
+                    }).catch(function() {});
+                }
+
                 page.addEventListener('pageshow', function() {
                     Dashboard.showLoadingMsg();
+                    loadVersion();
                     ApiClient.getPluginConfiguration(pluginId).then(function(config) {
                         document.querySelector('#YtDlpPath').value = config.YtDlpPath || '';
                         document.querySelector('#TrailerPath').value = config.TrailerPath || 'trailer.mp4';

@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Jellyfin.Plugin.JellyTrailers.Configuration;
@@ -60,6 +59,19 @@ public class JellyTrailersController : ControllerBase
             if (!string.IsNullOrEmpty(msg)) return msg;
         }
         return ex.GetType().Name;
+    }
+
+    /// <summary>
+    /// Get the current plugin version (for display on settings page).
+    /// </summary>
+    /// <returns>Plugin version string (e.g. 1.2.0.0).</returns>
+    [HttpGet("Version")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public ActionResult<PluginVersionResult> GetVersion()
+    {
+        var version = typeof(Plugin).Assembly.GetName().Version;
+        var versionString = version != null ? version.ToString() : "0.0.0";
+        return Ok(new PluginVersionResult { Version = versionString });
     }
 
     /// <summary>
@@ -150,4 +162,10 @@ public class YtDlpDownloadResult
     public bool Success { get; set; }
     public string Path { get; set; } = string.Empty;
     public string Message { get; set; } = string.Empty;
+}
+
+/// <summary>Plugin version for the settings page.</summary>
+public class PluginVersionResult
+{
+    public string Version { get; set; } = string.Empty;
 }

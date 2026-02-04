@@ -7,9 +7,9 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);1591</NoWarn>
     <CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)../jellyfin.ruleset</CodeAnalysisRuleSet>
-    <Version>1.2.0</Version>
-    <AssemblyVersion>1.2.0.0</AssemblyVersion>
-    <FileVersion>1.2.0.0</FileVersion>
+    <Version>1.2.1</Version>
+    <AssemblyVersion>1.2.1.0</AssemblyVersion>
+    <FileVersion>1.2.1.0</FileVersion>
     <AssemblyName>Jellyfin.Plugin.JellyTrailers</AssemblyName>
     <RootNamespace>Jellyfin.Plugin.JellyTrailers</RootNamespace>
     <PackageId>Jellyfin.Plugin.JellyTrailers</PackageId>

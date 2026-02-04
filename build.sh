@@ -87,6 +87,34 @@ ensure_podman() {
   fi
 }
 
+# --- MD5 checksum (portable: md5sum, openssl, md5) ---
+get_md5() {
+  local f="$1"
+  if [[ ! -f "$f" ]]; then echo ""; return; fi
+  if command -v md5sum &>/dev/null; then
+    md5sum "$f" | cut -d' ' -f1
+  elif command -v openssl &>/dev/null; then
+    openssl dgst -md5 -r "$f" 2>/dev/null | cut -d' ' -f1
+  elif command -v md5 &>/dev/null; then
+    md5 -r "$f" 2>/dev/null | awk '{print $1}'
+  else
+    echo ""
+  fi
+}
+
+# --- Update manifest.json checksums for current version (10.10 = zip1, 10.11/10.12 = zip2) ---
+update_manifest_checksums() {
+  local manifest="$1" pv="$2" c10="$3" c12="$4"
+  [[ ! -f "$manifest" || -z "$pv" ]] && return
+  if ! command -v jq &>/dev/null; then return; fi
+  jq --arg pv "$pv" --arg c10 "${c10:-}" --arg c12 "${c12:-}" \
+    '.[0].versions |= map(
+      if .version == $pv then
+        if .targetAbi == "10.10.0.0" then .checksum = $c10 else .checksum = $c12 end
+      else . end
+    )' "$manifest" > "${manifest}.tmp" && mv "${manifest}.tmp" "$manifest"
+}
+
 echo "Checking prerequisites..."
 ensure_dotnet
 if [[ "$NOW" -eq 0 ]]; then
@@ -110,7 +138,9 @@ if [[ "$NOW" -eq 1 ]]; then
   RELEASE_TAG="v${PLUGIN_VERSION%.0}"
 
   echo "Building $PLUGIN_NAME for release (net8.0 + net9.0) — version $PLUGIN_VERSION from manifest..."
-  dotnet build Jellyfin.Plugin.JellyTrailers.sln -c Release -v q
+  # Build each framework separately so restore/assets work for both (avoids NETSDK1005 on net9.0)
+  dotnet build Jellyfin.Plugin.JellyTrailers/Jellyfin.Plugin.JellyTrailers.csproj -c Release -v q -f net8.0
+  dotnet build Jellyfin.Plugin.JellyTrailers/Jellyfin.Plugin.JellyTrailers.csproj -c Release -v q -f net9.0
   OUT_NET8="$BUILD_DIR/net8.0"
   OUT_NET9="$BUILD_DIR/net9.0"
   for dir in "$OUT_NET8" "$OUT_NET9"; do
@@ -123,10 +153,16 @@ if [[ "$NOW" -eq 1 ]]; then
   mkdir -p "$RELEASES_DIR"
   ZIP_10_10="JellyTrailers_${PLUGIN_VERSION}.zip"
   ZIP_10_12="JellyTrailers_${PLUGIN_VERSION}_10.12.zip"
-  ( cd "$OUT_NET8" && zip -r "$RELEASES_DIR/$ZIP_10_10" . -q )
-  ( cd "$OUT_NET9" && zip -r "$RELEASES_DIR/$ZIP_10_12" . -q )
+  ( cd "$OUT_NET8" && zip -r "$RELEASES_DIR/$ZIP_10_10" ${PLUGIN_NAME}.* -q )
+  ( cd "$OUT_NET9" && zip -r "$RELEASES_DIR/$ZIP_10_12" ${PLUGIN_NAME}.* -q )
   echo "Created: $RELEASES_DIR/$ZIP_10_10 (10.10.x)"
   echo "Created: $RELEASES_DIR/$ZIP_10_12 (10.11/10.12)"
+  CHECKSUM_10_10=$(get_md5 "$RELEASES_DIR/$ZIP_10_10")
+  CHECKSUM_10_12=$(get_md5 "$RELEASES_DIR/$ZIP_10_12")
+  update_manifest_checksums "$MANIFEST_JSON" "$PLUGIN_VERSION" "$CHECKSUM_10_10" "$CHECKSUM_10_12"
+  if [[ -n "$CHECKSUM_10_10" || -n "$CHECKSUM_10_12" ]]; then
+    echo "Updated manifest.json checksums for $PLUGIN_VERSION"
+  fi
 
   # Commit and push before creating release (zips are gitignored)
   git add .
@@ -254,6 +290,9 @@ echo "Jellyfin version in container: ${JF_VER_RAW:-unknown} (using build for ${J
 
 # --- Build ---
 echo "Building $PLUGIN_NAME (net8.0 for 10.10, net9.0 for 10.11/10.12)..."
+dotnet clean Jellyfin.Plugin.JellyTrailers.sln -c Release -v q
+rm -rf "$SCRIPT_DIR/Jellyfin.Plugin.JellyTrailers/obj"
+dotnet restore Jellyfin.Plugin.JellyTrailers.sln -c Release -v q
 BUILD_FULL_SUCCESS=0
 # Build all targets; if net9.0 not supported by SDK or build error, build net8.0 only
 if dotnet build Jellyfin.Plugin.JellyTrailers.sln -c Release -v q 2>/dev/null; then
@@ -290,14 +329,21 @@ if [[ -n "$PLUGIN_VERSION" && "$PLUGIN_VERSION" != "null" ]]; then
   mkdir -p "$RELEASES_DIR"
   if [[ -f "$BUILD_DIR/net8.0/$PLUGIN_NAME.dll" ]]; then
     ZIP_10_10="JellyTrailers_${PLUGIN_VERSION}.zip"
-    ( cd "$BUILD_DIR/net8.0" && zip -r "$RELEASES_DIR/$ZIP_10_10" . -q )
+    ( cd "$BUILD_DIR/net8.0" && zip -r "$RELEASES_DIR/$ZIP_10_10" ${PLUGIN_NAME}.* -q )
     echo "Created: $RELEASES_DIR/$ZIP_10_10"
+    CHECKSUM_10_10=$(get_md5 "$RELEASES_DIR/$ZIP_10_10")
+  else
+    CHECKSUM_10_10=""
   fi
   if [[ -f "$BUILD_DIR/net9.0/$PLUGIN_NAME.dll" ]]; then
     ZIP_10_12="JellyTrailers_${PLUGIN_VERSION}_10.12.zip"
-    ( cd "$BUILD_DIR/net9.0" && zip -r "$RELEASES_DIR/$ZIP_10_12" . -q )
+    ( cd "$BUILD_DIR/net9.0" && zip -r "$RELEASES_DIR/$ZIP_10_12" ${PLUGIN_NAME}.* -q )
     echo "Created: $RELEASES_DIR/$ZIP_10_12"
+    CHECKSUM_10_12=$(get_md5 "$RELEASES_DIR/$ZIP_10_12")
+  else
+    CHECKSUM_10_12=""
   fi
+  update_manifest_checksums "$MANIFEST_JSON" "$PLUGIN_VERSION" "$CHECKSUM_10_10" "$CHECKSUM_10_12"
 else
   echo "Skipping release zips (could not read version from manifest.json; need jq?)."
 fi
