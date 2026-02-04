@@ -132,6 +132,10 @@
                     <div class="trailers-card" id="JellyTrailersStatsCard" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 1.25rem; margin-bottom: 1.5rem;">
                         <h3 style="margin: 0 0 1rem 0; font-size: 1rem; font-weight: 600; color: rgba(255,255,255,0.9);">Statistics</h3>
                         <div id="JellyTrailersStatsContent">Loading stats…</div>
+                        <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.08);">
+                            <p class="fieldDescription" style="margin: 0 0 0.5rem 0;">Clear downloaded/failed counts and run history.</p>
+                            <button type="button" id="BtnResetStats" is="emby-button" class="emby-button" style="padding: 0.35rem 0.75rem; font-size: 0.875rem;">Reset statistics</button>
+                        </div>
                     </div>
 
                     <div class="trailers-card" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 1.25rem; margin-bottom: 1.5rem;">
@@ -254,7 +258,6 @@
                     var valueGreen = 'font-size: 1.25rem; font-weight: 600; color: #4ade80;';
                     var valueWarn = 'font-size: 1.25rem; font-weight: 600; color: #fbbf24;';
                     var valueMuted = 'font-size: 1.25rem; font-weight: 600; color: rgba(255,255,255,0.7);';
-                    var btnBoxStyle = boxStyle + ' display: flex; align-items: center; justify-content: flex-end;';
                     var html = '';
                     if (hasFolderStats) {
                         html += '<div style="margin-bottom: 1rem; padding: 0.75rem 1rem; background: rgba(0,0,0,0.2); border-radius: 6px; border: 1px solid rgba(255,255,255,0.08); font-size: 0.9rem; color: rgba(255,255,255,0.85);">' +
@@ -269,7 +272,6 @@
                         '<div style="' + boxStyle + '"><div style="' + labelStyle + '">Last year</div><div style="' + valueGreen + '">' + d365 + '</div></div>' +
                         '<div style="' + boxStyle + '"><div style="' + labelStyle + '">Failed (total)</div><div style="' + valueWarn + '">' + totalF + '</div></div>' +
                         '<div style="' + boxStyle + '"><div style="' + labelStyle + '">Task runs</div><div style="' + valueMuted + '">' + runs + '</div></div>' +
-                        '<div style="' + btnBoxStyle + '"><button type="button" id="BtnResetStats" is="emby-button" class="emby-button" style="padding: 0.35rem 0.75rem; font-size: 0.875rem; background: rgba(60,60,60,0.95); color: #fff; border: 1px solid rgba(255,255,255,0.25); border-radius: 4px;">Reset</button></div>' +
                         '</div>';
                     if (stats.lastRunDate) {
                         var ytDlpVer = (typeof lastYtDlpVersion !== 'undefined' && lastYtDlpVersion) ? ('yt-dlp: ' + lastYtDlpVersion) : '';
@@ -435,8 +437,7 @@
                     });
                 });
 
-                document.querySelector('#JellyTrailersStatsCard').addEventListener('click', function(e) {
-                    if (e.target.id !== 'BtnResetStats' && !e.target.closest('#BtnResetStats')) return;
+                document.querySelector('#BtnResetStats').addEventListener('click', function() {
                     if (!confirm('Reset all trailer statistics (downloaded/failed counts and run history)?')) return;
                     var contentEl = document.querySelector('#JellyTrailersStatsContent');
                     contentEl.textContent = 'Resetting…';
