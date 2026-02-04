@@ -216,6 +216,7 @@
         </div>
         <script type="text/javascript">
             (function() {
+                // Must match PluginConstants.PluginId (single source: PluginConstants.cs)
                 var pluginId = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890';
                 var page = document.querySelector('#JellyTrailersConfigPage');
                 var form = document.querySelector('#JellyTrailersConfigForm');
@@ -351,17 +352,17 @@
                     statsPollInterval = setInterval(refreshStats, 10000);
                     ApiClient.getJSON(ApiClient.getUrl('ScheduledTasks')).then(function(tasks) {
                         var task = tasks.find(function(t) { return t.Key === 'JellyTrailersDownload'; });
-                        var triggers = task && (task.Triggers || task.TriggerInfo || []);
-                        if (task && triggers.length > 0) {
-                            var trigger = triggers[0];
+                        // Server may return Triggers (10.11+) or TriggerInfo (10.10); either may be array or single object
+                        var raw = task && (task.Triggers || task.TriggerInfo);
+                        var triggers = Array.isArray(raw) ? raw : (raw != null ? [raw] : []);
+                        var triggerWithTime = triggers.find(function(t) { return t != null && (t.TimeOfDayTicks != null || t.TimeOfDayTicks === 0); });
+                        if (task && triggerWithTime) {
                             document.querySelector('#ScheduleEnabled').checked = true;
-                            var ticks = trigger.TimeOfDayTicks;
-                            if (ticks != null) {
-                                var sec = Math.floor(Number(ticks) / 1e7);
-                                var h = Math.floor(sec / 3600) % 24;
-                                var m = Math.floor((sec % 3600) / 60);
-                                document.querySelector('#ScheduleTime').value = (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m;
-                            }
+                            var ticks = triggerWithTime.TimeOfDayTicks;
+                            var sec = Math.floor(Number(ticks) / 1e7);
+                            var h = Math.floor(sec / 3600) % 24;
+                            var m = Math.floor((sec % 3600) / 60);
+                            document.querySelector('#ScheduleTime').value = (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m;
                         } else {
                             document.querySelector('#ScheduleEnabled').checked = false;
                             document.querySelector('#ScheduleTime').value = '02:00';
@@ -416,6 +417,7 @@
                             var m = parseInt(parts[1], 10) || 0;
                             var sec = (h * 3600 + m * 60) % 86400;
                             var timeOfDayTicks = sec * 1e7;
+                            // API expects TaskTriggerInfo[]; Type as string works for 10.11+, numeric 2 for 10.10 Daily
                             triggers = [{ Type: 'DailyTrigger', TimeOfDayTicks: timeOfDayTicks }];
                         }
                         return ApiClient.ajax({

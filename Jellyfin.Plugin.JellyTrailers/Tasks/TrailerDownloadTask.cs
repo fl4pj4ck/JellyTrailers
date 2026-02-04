@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Jellyfin.Plugin.JellyTrailers;
 using Jellyfin.Plugin.JellyTrailers.Configuration;
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Controller.Library;
@@ -17,6 +16,7 @@ namespace Jellyfin.Plugin.JellyTrailers.Tasks;
 /// </summary>
 public class TrailerDownloadTask : IScheduledTask
 {
+    private readonly PluginConfiguration _config;
     private readonly ILibraryManager _libraryManager;
     private readonly ILogger<TrailerDownloadTask> _logger;
     private readonly ILoggerFactory _loggerFactory;
@@ -24,12 +24,14 @@ public class TrailerDownloadTask : IScheduledTask
     private readonly IHttpClientFactory _httpClientFactory;
 
     public TrailerDownloadTask(
+        PluginConfiguration config,
         ILibraryManager libraryManager,
         ILogger<TrailerDownloadTask> logger,
         ILoggerFactory loggerFactory,
         IApplicationPaths applicationPaths,
         IHttpClientFactory httpClientFactory)
     {
+        _config = config;
         _libraryManager = libraryManager;
         _logger = logger;
         _loggerFactory = loggerFactory;
@@ -52,16 +54,9 @@ public class TrailerDownloadTask : IScheduledTask
     /// <inheritdoc />
     public async Task ExecuteAsync(IProgress<double> progress, CancellationToken cancellationToken)
     {
-        if (Plugin.Instance == null)
-        {
-            _logger.LogWarning("Plugin instance not available.");
-            return;
-        }
-
-        var config = Plugin.Instance.Configuration;
         var scanner = new LibraryScanner(_libraryManager, _loggerFactory.CreateLogger<LibraryScanner>());
         var statsStore = new TrailerStatsStore(_applicationPaths, _loggerFactory.CreateLogger<TrailerStatsStore>());
-        var ytDlp = new YtDlpRunner(config, _applicationPaths, _loggerFactory.CreateLogger<YtDlpRunner>(), _httpClientFactory);
+        var ytDlp = new YtDlpRunner(_config, _applicationPaths, _loggerFactory.CreateLogger<YtDlpRunner>(), _httpClientFactory);
 
         // 1. Get library roots and scan filesystem (no persistent list; order by folder mtime so newer items first)
         var roots = scanner.GetLibraryRoots();
@@ -76,7 +71,7 @@ public class TrailerDownloadTask : IScheduledTask
         _logger.LogInformation("Scanned {Count} library folders.", currentEntries.Count);
 
         // 2. Entries that need a trailer (file doesn't exist), newest folders first (by directory mtime)
-        var trailerPath = config.GetEffectiveTrailerPath();
+        var trailerPath = _config.GetEffectiveTrailerPath();
         var needs = currentEntries
             .Where(e => !EntryHasTrailer(e.Path, trailerPath))
             .OrderByDescending(e => GetFolderSortTime(e.Path))
@@ -86,7 +81,7 @@ public class TrailerDownloadTask : IScheduledTask
         statsStore.RecordFolderCounts(currentEntries.Count, foldersWithTrailer);
 
         var skipped = foldersWithTrailer;
-        var maxPerRun = config.MaxTrailersPerRun;
+        var maxPerRun = _config.MaxTrailersPerRun;
         if (maxPerRun > 0 && needs.Count > maxPerRun)
             needs = needs.Take(maxPerRun).ToList();
 
@@ -98,14 +93,14 @@ public class TrailerDownloadTask : IScheduledTask
             return;
         }
 
-        var delayMs = Math.Max(0, config.DelaySeconds) * 1000;
-        var retryDelayMs = Math.Max(0, config.RetryDelaySeconds) * 1000;
+        var delayMs = Math.Max(0, _config.DelaySeconds) * 1000;
+        var retryDelayMs = Math.Max(0, _config.RetryDelaySeconds) * 1000;
         var processed = 0;
         var failed = 0;
 
         _logger.LogInformation(
             "Trailer task: {Count} to process (skipped {Skipped} already have trailer), delay {Delay}s between items.",
-            needs.Count, skipped, config.DelaySeconds);
+            needs.Count, skipped, _config.DelaySeconds);
 
         try
         {

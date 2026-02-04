@@ -1,6 +1,7 @@
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Threading;
 using MediaBrowser.Common.Configuration;
 using Microsoft.Extensions.Logging;
 
@@ -8,6 +9,8 @@ namespace Jellyfin.Plugin.JellyTrailers;
 
 /// <summary>
 /// Persists run stats (downloaded/failed counts) and returns aggregated stats for the settings page.
+/// All file I/O uses a single static semaphore so reads/writes are serialized. If async file I/O
+/// is added later, use the same semaphore with <see cref="SemaphoreSlim.WaitAsync()"/> to keep locking consistent.
 /// </summary>
 public class TrailerStatsStore
 {
@@ -19,7 +22,11 @@ public class TrailerStatsStore
         PropertyNameCaseInsensitive = true,
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     };
-    private static readonly object Lock = new();
+
+    /// <summary>
+    /// Single lock for all stats file access. Use Wait() for sync calls; use WaitAsync() when adding async I/O.
+    /// </summary>
+    private static readonly SemaphoreSlim StorageLock = new(1, 1);
 
     public TrailerStatsStore(IApplicationPaths applicationPaths, ILogger logger)
     {
@@ -36,12 +43,17 @@ public class TrailerStatsStore
     /// <param name="foldersWithTrailer">Number of folders that already have a trailer file.</param>
     public void RecordFolderCounts(int totalFolders, int foldersWithTrailer)
     {
-        lock (Lock)
+        StorageLock.Wait();
+        try
         {
             var data = LoadData();
             data.TotalFolders = totalFolders;
             data.FoldersWithTrailer = foldersWithTrailer;
             SaveData(data);
+        }
+        finally
+        {
+            StorageLock.Release();
         }
     }
 
@@ -63,7 +75,8 @@ public class TrailerStatsStore
     /// <param name="failed">Number of failed downloads so far.</param>
     public void RecordProgress(int downloaded, int failed)
     {
-        lock (Lock)
+        StorageLock.Wait();
+        try
         {
             var data = LoadData();
             var today = DateTime.UtcNow.Date.ToString("o", System.Globalization.CultureInfo.InvariantCulture);
@@ -89,6 +102,10 @@ public class TrailerStatsStore
                 .ToList();
             SaveData(data);
         }
+        finally
+        {
+            StorageLock.Release();
+        }
     }
 
     /// <summary>
@@ -96,10 +113,15 @@ public class TrailerStatsStore
     /// </summary>
     public void Reset()
     {
-        lock (Lock)
+        StorageLock.Wait();
+        try
         {
             SaveData(new StatsData());
             _logger.LogInformation("Trailer stats reset");
+        }
+        finally
+        {
+            StorageLock.Release();
         }
     }
 
@@ -110,7 +132,8 @@ public class TrailerStatsStore
     /// <returns>Aggregated trailer stats for the settings page.</returns>
     public TrailerStats GetStats()
     {
-        lock (Lock)
+        StorageLock.Wait();
+        try
         {
             var data = LoadData();
             var now = DateTime.UtcNow;
@@ -141,6 +164,10 @@ public class TrailerStatsStore
                 LastRunFailed = data.Runs.Count > 0 ? data.Runs[^1].Failed : 0,
                 TotalRuns = data.Runs.Count
             };
+        }
+        finally
+        {
+            StorageLock.Release();
         }
     }
 

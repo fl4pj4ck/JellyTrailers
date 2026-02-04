@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Jellyfin.Plugin.JellyTrailers;
 using Jellyfin.Plugin.JellyTrailers.Configuration;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Tasks;
@@ -14,15 +13,18 @@ namespace Jellyfin.Plugin.JellyTrailers.Tasks;
 /// </summary>
 public class RemoveAllTrailersTask : IScheduledTask
 {
+    private readonly PluginConfiguration _config;
     private readonly ILibraryManager _libraryManager;
     private readonly ILogger<RemoveAllTrailersTask> _logger;
     private readonly ILoggerFactory _loggerFactory;
 
     public RemoveAllTrailersTask(
+        PluginConfiguration config,
         ILibraryManager libraryManager,
         ILogger<RemoveAllTrailersTask> logger,
         ILoggerFactory loggerFactory)
     {
+        _config = config;
         _libraryManager = libraryManager;
         _logger = logger;
         _loggerFactory = loggerFactory;
@@ -43,14 +45,7 @@ public class RemoveAllTrailersTask : IScheduledTask
     /// <inheritdoc />
     public Task ExecuteAsync(IProgress<double> progress, CancellationToken cancellationToken)
     {
-        if (Plugin.Instance == null)
-        {
-            _logger.LogWarning("Plugin instance not available.");
-            return Task.CompletedTask;
-        }
-
-        var config = Plugin.Instance.Configuration;
-        var trailerPath = config.GetEffectiveTrailerPath();
+        var trailerPath = _config.GetEffectiveTrailerPath();
         var scanner = new LibraryScanner(_libraryManager, _loggerFactory.CreateLogger<LibraryScanner>());
 
         var roots = scanner.GetLibraryRoots();

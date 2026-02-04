@@ -4,7 +4,7 @@
     "name": "JellyTrailers",
     "description": "JellyTrailers runs inside Jellyfin and uses your server's movie/TV library roots. It downloads missing trailers via yt-dlp (auto-downloaded if not installed), writes trailer files next to each folder, and queues a library scan after each run. Configure in Dashboard → Plugins → JellyTrailers; scheduled task runs daily by default.",
     "overview": "Download movie and TV show trailers with yt-dlp and place them next to your media.",
-    "owner": "JellyTrailers contributors",
+    "owner": "fl4pj4ck",
     "category": "General",
     "imageUrl": "https://raw.githubusercontent.com/fl4pj4ck/JellyTrailers/main/assets/icon.png",
     "versions": [
@@ -125,6 +125,54 @@
         "changelog": "1.1.2: YtDlpOptionsJson allowlist — only safe option names (user-agent, proxy, format, etc.) are applied; exec and similar are ignored.",
         "targetAbi": "10.12.0.0",
         "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.1.2/JellyTrailers_1.1.2.0_10.12.zip",
+        "checksum": "",
+        "timestamp": "2025-02-04T00:00:00Z"
+      },
+      {
+        "version": "1.1.3.0",
+        "changelog": "1.1.3: Plugin.Instance replaced by DI — IPluginServiceRegistrator registers Plugin and PluginConfiguration; tasks and API controller inject PluginConfiguration.",
+        "targetAbi": "10.10.0.0",
+        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.1.3/JellyTrailers_1.1.3.0.zip",
+        "checksum": "",
+        "timestamp": "2025-02-04T00:00:00Z"
+      },
+      {
+        "version": "1.1.3.0",
+        "changelog": "1.1.3: Plugin.Instance replaced by DI — IPluginServiceRegistrator registers Plugin and PluginConfiguration; tasks and API controller inject PluginConfiguration.",
+        "targetAbi": "10.11.0.0",
+        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.1.3/JellyTrailers_1.1.3.0_10.12.zip",
+        "checksum": "",
+        "timestamp": "2025-02-04T00:00:00Z"
+      },
+      {
+        "version": "1.1.3.0",
+        "changelog": "1.1.3: Plugin.Instance replaced by DI — IPluginServiceRegistrator registers Plugin and PluginConfiguration; tasks and API controller inject PluginConfiguration.",
+        "targetAbi": "10.12.0.0",
+        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.1.3/JellyTrailers_1.1.3.0_10.12.zip",
+        "checksum": "",
+        "timestamp": "2025-02-04T00:00:00Z"
+      },
+      {
+        "version": "1.1.4.0",
+        "changelog": "1.1.4: Single source for plugin ID (PluginConstants.cs); manifest and config page reference it.",
+        "targetAbi": "10.10.0.0",
+        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.1.4/JellyTrailers_1.1.4.0.zip",
+        "checksum": "",
+        "timestamp": "2025-02-04T00:00:00Z"
+      },
+      {
+        "version": "1.1.4.0",
+        "changelog": "1.1.4: Single source for plugin ID (PluginConstants.cs); manifest and config page reference it.",
+        "targetAbi": "10.11.0.0",
+        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.1.4/JellyTrailers_1.1.4.0_10.12.zip",
+        "checksum": "",
+        "timestamp": "2025-02-04T00:00:00Z"
+      },
+      {
+        "version": "1.1.4.0",
+        "changelog": "1.1.4: Single source for plugin ID (PluginConstants.cs); manifest and config page reference it.",
+        "targetAbi": "10.12.0.0",
+        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.1.4/JellyTrailers_1.1.4.0_10.12.zip",
         "checksum": "",
         "timestamp": "2025-02-04T00:00:00Z"
       }
