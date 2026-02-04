@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Jellyfin.Plugin.JellyTrailers;
 using Jellyfin.Plugin.JellyTrailers.Configuration;
 using MediaBrowser.Common.Configuration;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -13,9 +14,11 @@ namespace Jellyfin.Plugin.JellyTrailers.Api;
 
 /// <summary>
 /// API controller for JellyTrailers plugin (stats and yt-dlp check).
+/// Endpoints require authentication; intended for use from the Dashboard config page (admin).
 /// </summary>
 [Route("Plugins/JellyTrailers")]
 [ApiController]
+[Authorize]
 public class JellyTrailersController : ControllerBase
 {
     private readonly IApplicationPaths _applicationPaths;

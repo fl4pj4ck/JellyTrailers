@@ -7,9 +7,9 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);1591</NoWarn>
     <CodeAnalysisRuleSet>$(MSBuildThisFileDirectory)../jellyfin.ruleset</CodeAnalysisRuleSet>
-    <Version>1.0.2</Version>
-    <AssemblyVersion>1.0.2.0</AssemblyVersion>
-    <FileVersion>1.0.2.0</FileVersion>
+    <Version>1.1.0</Version>
+    <AssemblyVersion>1.1.0.0</AssemblyVersion>
+    <FileVersion>1.1.0.0</FileVersion>
     <AssemblyName>Jellyfin.Plugin.JellyTrailers</AssemblyName>
     <RootNamespace>Jellyfin.Plugin.JellyTrailers</RootNamespace>
     <PackageId>Jellyfin.Plugin.JellyTrailers</PackageId>
@@ -21,6 +21,10 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Configuration\trailers.html" LogicalName="Jellyfin.Plugin.JellyTrailers.Configuration.trailers.html" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
 
   <!-- Jellyfin 10.10.x (net8.0) -->
