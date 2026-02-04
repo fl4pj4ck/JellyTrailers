@@ -9,194 +9,42 @@
     "imageUrl": "https://raw.githubusercontent.com/fl4pj4ck/JellyTrailers/main/assets/icon.png",
     "versions": [
       {
-        "version": "1.0.0.0",
-        "changelog": "Initial release. Download trailers with yt-dlp; auto-download yt-dlp when path empty. Supports movie and TV libraries; configurable quality, delay, max per run.",
-        "targetAbi": "10.10.0.0",
-        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.0.0/JellyTrailers_1.0.0.0.zip",
-        "checksum": "a7455b7aa74d838b7dd57fd7e04df2d4",
-        "timestamp": "2025-02-03T00:00:00Z"
-      },
-      {
-        "version": "1.0.0.0",
-        "changelog": "Initial release. Download trailers with yt-dlp; auto-download yt-dlp when path empty. Supports movie and TV libraries; configurable quality, delay, max per run.",
-        "targetAbi": "10.11.0.0",
-        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.0.0/JellyTrailers_1.0.0.0_10.12.zip",
-        "checksum": "764d02fbf015efd0e1d2f6aac7b2e971",
-        "timestamp": "2025-02-03T00:00:00Z"
-      },
-      {
-        "version": "1.0.0.0",
-        "changelog": "Initial release. Download trailers with yt-dlp; auto-download yt-dlp when path empty. Supports movie and TV libraries; configurable quality, delay, max per run.",
+        "version": "1.2.1.0",
+        "changelog": "1.2.1: Release.",
         "targetAbi": "10.12.0.0",
-        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.0.0/JellyTrailers_1.0.0.0_10.12.zip",
-        "checksum": "764d02fbf015efd0e1d2f6aac7b2e971",
-        "timestamp": "2025-02-03T00:00:00Z"
-      },
-      {
-        "version": "1.0.1.0",
-        "changelog": "1.0.1: Cross-platform WorkingDirectory for yt-dlp (use system temp path).",
-        "targetAbi": "10.10.0.0",
-        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.0.1/JellyTrailers_1.0.1.0.zip",
-        "checksum": "",
+        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.2.1/JellyTrailers_1.2.1.0_10.12.zip",
+        "checksum": "0001d30317c8a19e09775b72fe91a431",
         "timestamp": "2025-02-04T00:00:00Z"
       },
       {
-        "version": "1.0.1.0",
-        "changelog": "1.0.1: Cross-platform WorkingDirectory for yt-dlp (use system temp path).",
+        "version": "1.2.1.0",
+        "changelog": "1.2.1: Release.",
         "targetAbi": "10.11.0.0",
-        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.0.1/JellyTrailers_1.0.1.0_10.12.zip",
-        "checksum": "",
+        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.2.1/JellyTrailers_1.2.1.0_10.12.zip",
+        "checksum": "0001d30317c8a19e09775b72fe91a431",
         "timestamp": "2025-02-04T00:00:00Z"
       },
       {
-        "version": "1.0.1.0",
-        "changelog": "1.0.1: Cross-platform WorkingDirectory for yt-dlp (use system temp path).",
-        "targetAbi": "10.12.0.0",
-        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.0.1/JellyTrailers_1.0.1.0_10.12.zip",
-        "checksum": "",
-        "timestamp": "2025-02-04T00:00:00Z"
-      },
-      {
-        "version": "1.0.2.0",
-        "changelog": "1.0.2: Documentation XML (param/returns) for public API; jellyfin.ruleset for code analysis.",
+        "version": "1.2.1.0",
+        "changelog": "1.2.1: Release.",
         "targetAbi": "10.10.0.0",
-        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.0.2/JellyTrailers_1.0.2.0.zip",
-        "checksum": "",
+        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.2.1/JellyTrailers_1.2.1.0.zip",
+        "checksum": "8d65c760f137e5b966a7f329fc7667f2",
         "timestamp": "2025-02-04T00:00:00Z"
       },
       {
-        "version": "1.0.2.0",
-        "changelog": "1.0.2: Documentation XML (param/returns) for public API; jellyfin.ruleset for code analysis.",
-        "targetAbi": "10.11.0.0",
-        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.0.2/JellyTrailers_1.0.2.0_10.12.zip",
-        "checksum": "",
-        "timestamp": "2025-02-04T00:00:00Z"
-      },
-      {
-        "version": "1.0.2.0",
-        "changelog": "1.0.2: Documentation XML (param/returns) for public API; jellyfin.ruleset for code analysis.",
+        "version": "1.2.0.0",
+        "changelog": "1.2.0: TMDB/OMDb fallback when YouTube fails; new setting enabled by default.",
         "targetAbi": "10.12.0.0",
-        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.0.2/JellyTrailers_1.0.2.0_10.12.zip",
+        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.2.0/JellyTrailers_1.2.0.0_10.12.zip",
         "checksum": "",
         "timestamp": "2025-02-04T00:00:00Z"
       },
       {
-        "version": "1.1.0.0",
-        "changelog": "1.1.0: Plugin API endpoints now require authentication ([Authorize]); intended for Dashboard admin use.",
-        "targetAbi": "10.10.0.0",
-        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.1.0/JellyTrailers_1.1.0.0.zip",
-        "checksum": "",
-        "timestamp": "2025-02-04T00:00:00Z"
-      },
-      {
-        "version": "1.1.0.0",
-        "changelog": "1.1.0: Plugin API endpoints now require authentication ([Authorize]); intended for Dashboard admin use.",
+        "version": "1.2.0.0",
+        "changelog": "1.2.0: TMDB/OMDb fallback when YouTube fails; new setting enabled by default.",
         "targetAbi": "10.11.0.0",
-        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.1.0/JellyTrailers_1.1.0.0_10.12.zip",
-        "checksum": "",
-        "timestamp": "2025-02-04T00:00:00Z"
-      },
-      {
-        "version": "1.1.0.0",
-        "changelog": "1.1.0: Plugin API endpoints now require authentication ([Authorize]); intended for Dashboard admin use.",
-        "targetAbi": "10.12.0.0",
-        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.1.0/JellyTrailers_1.1.0.0_10.12.zip",
-        "checksum": "",
-        "timestamp": "2025-02-04T00:00:00Z"
-      },
-      {
-        "version": "1.1.2.0",
-        "changelog": "1.1.2: YtDlpOptionsJson allowlist — only safe option names (user-agent, proxy, format, etc.) are applied; exec and similar are ignored.",
-        "targetAbi": "10.10.0.0",
-        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.1.2/JellyTrailers_1.1.2.0.zip",
-        "checksum": "",
-        "timestamp": "2025-02-04T00:00:00Z"
-      },
-      {
-        "version": "1.1.2.0",
-        "changelog": "1.1.2: YtDlpOptionsJson allowlist — only safe option names (user-agent, proxy, format, etc.) are applied; exec and similar are ignored.",
-        "targetAbi": "10.11.0.0",
-        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.1.2/JellyTrailers_1.1.2.0_10.12.zip",
-        "checksum": "",
-        "timestamp": "2025-02-04T00:00:00Z"
-      },
-      {
-        "version": "1.1.2.0",
-        "changelog": "1.1.2: YtDlpOptionsJson allowlist — only safe option names (user-agent, proxy, format, etc.) are applied; exec and similar are ignored.",
-        "targetAbi": "10.12.0.0",
-        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.1.2/JellyTrailers_1.1.2.0_10.12.zip",
-        "checksum": "",
-        "timestamp": "2025-02-04T00:00:00Z"
-      },
-      {
-        "version": "1.1.3.0",
-        "changelog": "1.1.3: Plugin.Instance replaced by DI — IPluginServiceRegistrator registers Plugin and PluginConfiguration; tasks and API controller inject PluginConfiguration.",
-        "targetAbi": "10.10.0.0",
-        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.1.3/JellyTrailers_1.1.3.0.zip",
-        "checksum": "",
-        "timestamp": "2025-02-04T00:00:00Z"
-      },
-      {
-        "version": "1.1.3.0",
-        "changelog": "1.1.3: Plugin.Instance replaced by DI — IPluginServiceRegistrator registers Plugin and PluginConfiguration; tasks and API controller inject PluginConfiguration.",
-        "targetAbi": "10.11.0.0",
-        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.1.3/JellyTrailers_1.1.3.0_10.12.zip",
-        "checksum": "",
-        "timestamp": "2025-02-04T00:00:00Z"
-      },
-      {
-        "version": "1.1.3.0",
-        "changelog": "1.1.3: Plugin.Instance replaced by DI — IPluginServiceRegistrator registers Plugin and PluginConfiguration; tasks and API controller inject PluginConfiguration.",
-        "targetAbi": "10.12.0.0",
-        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.1.3/JellyTrailers_1.1.3.0_10.12.zip",
-        "checksum": "",
-        "timestamp": "2025-02-04T00:00:00Z"
-      },
-      {
-        "version": "1.1.4.0",
-        "changelog": "1.1.4: Single source for plugin ID (PluginConstants.cs); manifest and config page reference it.",
-        "targetAbi": "10.10.0.0",
-        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.1.4/JellyTrailers_1.1.4.0.zip",
-        "checksum": "",
-        "timestamp": "2025-02-04T00:00:00Z"
-      },
-      {
-        "version": "1.1.4.0",
-        "changelog": "1.1.4: Single source for plugin ID (PluginConstants.cs); manifest and config page reference it.",
-        "targetAbi": "10.11.0.0",
-        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.1.4/JellyTrailers_1.1.4.0_10.12.zip",
-        "checksum": "",
-        "timestamp": "2025-02-04T00:00:00Z"
-      },
-      {
-        "version": "1.1.4.0",
-        "changelog": "1.1.4: Single source for plugin ID (PluginConstants.cs); manifest and config page reference it.",
-        "targetAbi": "10.12.0.0",
-        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.1.4/JellyTrailers_1.1.4.0_10.12.zip",
-        "checksum": "",
-        "timestamp": "2025-02-04T00:00:00Z"
-      },
-      {
-        "version": "1.1.6.0",
-        "changelog": "1.1.6: Schedule time: config page normalizes TriggerInfo/Triggers (array or single object) for 10.10 and 10.11+.",
-        "targetAbi": "10.10.0.0",
-        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.1.6/JellyTrailers_1.1.6.0.zip",
-        "checksum": "",
-        "timestamp": "2025-02-04T00:00:00Z"
-      },
-      {
-        "version": "1.1.6.0",
-        "changelog": "1.1.6: Schedule time: config page normalizes TriggerInfo/Triggers (array or single object) for 10.10 and 10.11+.",
-        "targetAbi": "10.11.0.0",
-        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.1.6/JellyTrailers_1.1.6.0_10.12.zip",
-        "checksum": "",
-        "timestamp": "2025-02-04T00:00:00Z"
-      },
-      {
-        "version": "1.1.6.0",
-        "changelog": "1.1.6: Schedule time: config page normalizes TriggerInfo/Triggers (array or single object) for 10.10 and 10.11+.",
-        "targetAbi": "10.12.0.0",
-        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.1.6/JellyTrailers_1.1.6.0_10.12.zip",
+        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.2.0/JellyTrailers_1.2.0.0_10.12.zip",
         "checksum": "",
         "timestamp": "2025-02-04T00:00:00Z"
       },
@@ -209,44 +57,196 @@
         "timestamp": "2025-02-04T00:00:00Z"
       },
       {
-        "version": "1.2.0.0",
-        "changelog": "1.2.0: TMDB/OMDb fallback when YouTube fails; new setting enabled by default.",
-        "targetAbi": "10.11.0.0",
-        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.2.0/JellyTrailers_1.2.0.0_10.12.zip",
-        "checksum": "",
-        "timestamp": "2025-02-04T00:00:00Z"
-      },
-      {
-        "version": "1.2.0.0",
-        "changelog": "1.2.0: TMDB/OMDb fallback when YouTube fails; new setting enabled by default.",
+        "version": "1.1.6.0",
+        "changelog": "1.1.6: Schedule time: config page normalizes TriggerInfo/Triggers (array or single object) for 10.10 and 10.11+.",
         "targetAbi": "10.12.0.0",
-        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.2.0/JellyTrailers_1.2.0.0_10.12.zip",
+        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.1.6/JellyTrailers_1.1.6.0_10.12.zip",
         "checksum": "",
         "timestamp": "2025-02-04T00:00:00Z"
       },
       {
-        "version": "1.2.1.0",
-        "changelog": "1.2.1: Release.",
+        "version": "1.1.6.0",
+        "changelog": "1.1.6: Schedule time: config page normalizes TriggerInfo/Triggers (array or single object) for 10.10 and 10.11+.",
+        "targetAbi": "10.11.0.0",
+        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.1.6/JellyTrailers_1.1.6.0_10.12.zip",
+        "checksum": "",
+        "timestamp": "2025-02-04T00:00:00Z"
+      },
+      {
+        "version": "1.1.6.0",
+        "changelog": "1.1.6: Schedule time: config page normalizes TriggerInfo/Triggers (array or single object) for 10.10 and 10.11+.",
         "targetAbi": "10.10.0.0",
-        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.2.1/JellyTrailers_1.2.1.0.zip",
-        "checksum": "72ae93fba23203e0b0bb7ff2cfba0fd7",
+        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.1.6/JellyTrailers_1.1.6.0.zip",
+        "checksum": "",
         "timestamp": "2025-02-04T00:00:00Z"
       },
       {
-        "version": "1.2.1.0",
-        "changelog": "1.2.1: Release.",
-        "targetAbi": "10.11.0.0",
-        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.2.1/JellyTrailers_1.2.1.0_10.12.zip",
-        "checksum": "fd94665aedf22f4a8abecb49bed0da19",
-        "timestamp": "2025-02-04T00:00:00Z"
-      },
-      {
-        "version": "1.2.1.0",
-        "changelog": "1.2.1: Release.",
+        "version": "1.1.4.0",
+        "changelog": "1.1.4: Single source for plugin ID (PluginConstants.cs); manifest and config page reference it.",
         "targetAbi": "10.12.0.0",
-        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.2.1/JellyTrailers_1.2.1.0_10.12.zip",
-        "checksum": "fd94665aedf22f4a8abecb49bed0da19",
+        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.1.4/JellyTrailers_1.1.4.0_10.12.zip",
+        "checksum": "",
         "timestamp": "2025-02-04T00:00:00Z"
+      },
+      {
+        "version": "1.1.4.0",
+        "changelog": "1.1.4: Single source for plugin ID (PluginConstants.cs); manifest and config page reference it.",
+        "targetAbi": "10.11.0.0",
+        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.1.4/JellyTrailers_1.1.4.0_10.12.zip",
+        "checksum": "",
+        "timestamp": "2025-02-04T00:00:00Z"
+      },
+      {
+        "version": "1.1.4.0",
+        "changelog": "1.1.4: Single source for plugin ID (PluginConstants.cs); manifest and config page reference it.",
+        "targetAbi": "10.10.0.0",
+        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.1.4/JellyTrailers_1.1.4.0.zip",
+        "checksum": "",
+        "timestamp": "2025-02-04T00:00:00Z"
+      },
+      {
+        "version": "1.1.3.0",
+        "changelog": "1.1.3: Plugin.Instance replaced by DI — IPluginServiceRegistrator registers Plugin and PluginConfiguration; tasks and API controller inject PluginConfiguration.",
+        "targetAbi": "10.12.0.0",
+        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.1.3/JellyTrailers_1.1.3.0_10.12.zip",
+        "checksum": "",
+        "timestamp": "2025-02-04T00:00:00Z"
+      },
+      {
+        "version": "1.1.3.0",
+        "changelog": "1.1.3: Plugin.Instance replaced by DI — IPluginServiceRegistrator registers Plugin and PluginConfiguration; tasks and API controller inject PluginConfiguration.",
+        "targetAbi": "10.11.0.0",
+        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.1.3/JellyTrailers_1.1.3.0_10.12.zip",
+        "checksum": "",
+        "timestamp": "2025-02-04T00:00:00Z"
+      },
+      {
+        "version": "1.1.3.0",
+        "changelog": "1.1.3: Plugin.Instance replaced by DI — IPluginServiceRegistrator registers Plugin and PluginConfiguration; tasks and API controller inject PluginConfiguration.",
+        "targetAbi": "10.10.0.0",
+        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.1.3/JellyTrailers_1.1.3.0.zip",
+        "checksum": "",
+        "timestamp": "2025-02-04T00:00:00Z"
+      },
+      {
+        "version": "1.1.2.0",
+        "changelog": "1.1.2: YtDlpOptionsJson allowlist — only safe option names (user-agent, proxy, format, etc.) are applied; exec and similar are ignored.",
+        "targetAbi": "10.12.0.0",
+        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.1.2/JellyTrailers_1.1.2.0_10.12.zip",
+        "checksum": "",
+        "timestamp": "2025-02-04T00:00:00Z"
+      },
+      {
+        "version": "1.1.2.0",
+        "changelog": "1.1.2: YtDlpOptionsJson allowlist — only safe option names (user-agent, proxy, format, etc.) are applied; exec and similar are ignored.",
+        "targetAbi": "10.11.0.0",
+        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.1.2/JellyTrailers_1.1.2.0_10.12.zip",
+        "checksum": "",
+        "timestamp": "2025-02-04T00:00:00Z"
+      },
+      {
+        "version": "1.1.2.0",
+        "changelog": "1.1.2: YtDlpOptionsJson allowlist — only safe option names (user-agent, proxy, format, etc.) are applied; exec and similar are ignored.",
+        "targetAbi": "10.10.0.0",
+        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.1.2/JellyTrailers_1.1.2.0.zip",
+        "checksum": "",
+        "timestamp": "2025-02-04T00:00:00Z"
+      },
+      {
+        "version": "1.1.0.0",
+        "changelog": "1.1.0: Plugin API endpoints now require authentication ([Authorize]); intended for Dashboard admin use.",
+        "targetAbi": "10.12.0.0",
+        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.1.0/JellyTrailers_1.1.0.0_10.12.zip",
+        "checksum": "",
+        "timestamp": "2025-02-04T00:00:00Z"
+      },
+      {
+        "version": "1.1.0.0",
+        "changelog": "1.1.0: Plugin API endpoints now require authentication ([Authorize]); intended for Dashboard admin use.",
+        "targetAbi": "10.11.0.0",
+        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.1.0/JellyTrailers_1.1.0.0_10.12.zip",
+        "checksum": "",
+        "timestamp": "2025-02-04T00:00:00Z"
+      },
+      {
+        "version": "1.1.0.0",
+        "changelog": "1.1.0: Plugin API endpoints now require authentication ([Authorize]); intended for Dashboard admin use.",
+        "targetAbi": "10.10.0.0",
+        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.1.0/JellyTrailers_1.1.0.0.zip",
+        "checksum": "",
+        "timestamp": "2025-02-04T00:00:00Z"
+      },
+      {
+        "version": "1.0.2.0",
+        "changelog": "1.0.2: Documentation XML (param/returns) for public API; jellyfin.ruleset for code analysis.",
+        "targetAbi": "10.12.0.0",
+        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.0.2/JellyTrailers_1.0.2.0_10.12.zip",
+        "checksum": "",
+        "timestamp": "2025-02-04T00:00:00Z"
+      },
+      {
+        "version": "1.0.2.0",
+        "changelog": "1.0.2: Documentation XML (param/returns) for public API; jellyfin.ruleset for code analysis.",
+        "targetAbi": "10.11.0.0",
+        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.0.2/JellyTrailers_1.0.2.0_10.12.zip",
+        "checksum": "",
+        "timestamp": "2025-02-04T00:00:00Z"
+      },
+      {
+        "version": "1.0.2.0",
+        "changelog": "1.0.2: Documentation XML (param/returns) for public API; jellyfin.ruleset for code analysis.",
+        "targetAbi": "10.10.0.0",
+        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.0.2/JellyTrailers_1.0.2.0.zip",
+        "checksum": "",
+        "timestamp": "2025-02-04T00:00:00Z"
+      },
+      {
+        "version": "1.0.1.0",
+        "changelog": "1.0.1: Cross-platform WorkingDirectory for yt-dlp (use system temp path).",
+        "targetAbi": "10.12.0.0",
+        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.0.1/JellyTrailers_1.0.1.0_10.12.zip",
+        "checksum": "",
+        "timestamp": "2025-02-04T00:00:00Z"
+      },
+      {
+        "version": "1.0.1.0",
+        "changelog": "1.0.1: Cross-platform WorkingDirectory for yt-dlp (use system temp path).",
+        "targetAbi": "10.11.0.0",
+        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.0.1/JellyTrailers_1.0.1.0_10.12.zip",
+        "checksum": "",
+        "timestamp": "2025-02-04T00:00:00Z"
+      },
+      {
+        "version": "1.0.1.0",
+        "changelog": "1.0.1: Cross-platform WorkingDirectory for yt-dlp (use system temp path).",
+        "targetAbi": "10.10.0.0",
+        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.0.1/JellyTrailers_1.0.1.0.zip",
+        "checksum": "",
+        "timestamp": "2025-02-04T00:00:00Z"
+      },
+      {
+        "version": "1.0.0.0",
+        "changelog": "Initial release. Download trailers with yt-dlp; auto-download yt-dlp when path empty. Supports movie and TV libraries; configurable quality, delay, max per run.",
+        "targetAbi": "10.12.0.0",
+        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.0.0/JellyTrailers_1.0.0.0_10.12.zip",
+        "checksum": "764d02fbf015efd0e1d2f6aac7b2e971",
+        "timestamp": "2025-02-03T00:00:00Z"
+      },
+      {
+        "version": "1.0.0.0",
+        "changelog": "Initial release. Download trailers with yt-dlp; auto-download yt-dlp when path empty. Supports movie and TV libraries; configurable quality, delay, max per run.",
+        "targetAbi": "10.11.0.0",
+        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.0.0/JellyTrailers_1.0.0.0_10.12.zip",
+        "checksum": "764d02fbf015efd0e1d2f6aac7b2e971",
+        "timestamp": "2025-02-03T00:00:00Z"
+      },
+      {
+        "version": "1.0.0.0",
+        "changelog": "Initial release. Download trailers with yt-dlp; auto-download yt-dlp when path empty. Supports movie and TV libraries; configurable quality, delay, max per run.",
+        "targetAbi": "10.10.0.0",
+        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.0.0/JellyTrailers_1.0.0.0.zip",
+        "checksum": "a7455b7aa74d838b7dd57fd7e04df2d4",
+        "timestamp": "2025-02-03T00:00:00Z"
       }
     ]
   }

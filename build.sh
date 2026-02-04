@@ -129,9 +129,9 @@ if [[ "$NOW" -eq 1 ]]; then
     echo "Error: manifest.json not found at $MANIFEST_JSON" >&2
     exit 1
   fi
-  PLUGIN_VERSION=$(jq -r '.[0].versions[-1].version' "$MANIFEST_JSON" 2>/dev/null)
+  PLUGIN_VERSION=$(jq -r '.[0].versions[0].version' "$MANIFEST_JSON" 2>/dev/null)
   if [[ -z "$PLUGIN_VERSION" || "$PLUGIN_VERSION" == "null" ]]; then
-    echo "Error: Could not read version from manifest.json (last entry in .versions). Install jq or fix manifest." >&2
+    echo "Error: Could not read version from manifest.json (first entry = latest in .versions). Install jq or fix manifest." >&2
     exit 1
   fi
   # Git tag: 1.0.1.0 -> v1.0.1 (drop trailing .0)
@@ -176,7 +176,7 @@ if [[ "$NOW" -eq 1 ]]; then
     if gh release view "$RELEASE_TAG" &>/dev/null; then
       echo "Release $RELEASE_TAG already exists; zips are in releases/. Up version in manifest.json and re-run to publish a new release."
     else
-      RELEASE_NOTES=$(jq -r '.[0].versions[-1].changelog' "$MANIFEST_JSON" 2>/dev/null)
+      RELEASE_NOTES=$(jq -r '.[0].versions[0].changelog' "$MANIFEST_JSON" 2>/dev/null)
       [[ -z "$RELEASE_NOTES" || "$RELEASE_NOTES" == "null" ]] && RELEASE_NOTES="Release $RELEASE_TAG"
       echo "Creating GitHub release $RELEASE_TAG..."
       gh release create "$RELEASE_TAG" \
@@ -324,7 +324,7 @@ fi
 # --- Zips into releases/ (version from manifest) ---
 RELEASES_DIR="$SCRIPT_DIR/releases"
 MANIFEST_JSON="$SCRIPT_DIR/manifest.json"
-PLUGIN_VERSION=$(jq -r '.[0].versions[-1].version' "$MANIFEST_JSON" 2>/dev/null)
+PLUGIN_VERSION=$(jq -r '.[0].versions[0].version' "$MANIFEST_JSON" 2>/dev/null)
 if [[ -n "$PLUGIN_VERSION" && "$PLUGIN_VERSION" != "null" ]]; then
   mkdir -p "$RELEASES_DIR"
   if [[ -f "$BUILD_DIR/net8.0/$PLUGIN_NAME.dll" ]]; then

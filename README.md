@@ -21,7 +21,7 @@ dotnet build Jellyfin.Plugin.JellyTrailers.sln -c Release
 
 ## Release
 
-From repo root: `./build.sh -now` (reads version from last entry in [manifest.json](manifest.json), builds net8.0 + net9.0, zips in `releases/`, creates GitHub release if missing). Requires `jq` and `gh`.
+From repo root: `./build.sh -now` (reads version from first entry in [manifest.json](manifest.json), builds net8.0 + net9.0, zips in `releases/`, creates GitHub release if missing). Requires `jq` and `gh`. Manifest `versions` must be **newest first** so Jellyfin shows the latest; after adding entries, re-sort with: `jq '.[0].versions |= (sort_by(.version | split(".") | map(tonumber? // 0)) | reverse)' manifest.json > m.tmp && mv m.tmp manifest.json`.
 
 ## License
 
