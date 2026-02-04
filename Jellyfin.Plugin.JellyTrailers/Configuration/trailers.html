@@ -195,6 +195,13 @@
                         <input id="MaxTrailersPerRun" name="MaxTrailersPerRun" type="number" is="emby-input" min="0" />
                         <div class="fieldDescription">Maximum trailers per scheduled run (0 = no limit).</div>
                     </div>
+                    <div class="checkboxContainer checkboxContainer-withDescription" style="margin-bottom: 1rem;">
+                        <label class="emby-checkbox-label">
+                            <input id="UseTmdbOmdbFallback" name="UseTmdbOmdbFallback" type="checkbox" is="emby-checkbox" />
+                            <span>Use TMDB/OMDb fallback when YouTube fails</span>
+                        </label>
+                        <div class="fieldDescription">If download from YouTube fails, try the first trailer URL from Jellyfin metadata (TMDB/OMDb).</div>
+                    </div>
                     <div class="inputContainer">
                         <label class="inputLabel inputLabelUnfocused" for="YtDlpOptionsJson">Extra yt-dlp options (JSON)</label>
                         <input id="YtDlpOptionsJson" name="YtDlpOptionsJson" type="text" is="emby-input" />
@@ -345,6 +352,7 @@
                         document.querySelector('#DelaySeconds').value = config.DelaySeconds != null ? config.DelaySeconds : 3;
                         document.querySelector('#RetryDelaySeconds').value = config.RetryDelaySeconds != null ? config.RetryDelaySeconds : 5;
                         document.querySelector('#MaxTrailersPerRun').value = config.MaxTrailersPerRun != null ? config.MaxTrailersPerRun : 50;
+                        document.querySelector('#UseTmdbOmdbFallback').checked = config.UseTmdbOmdbFallback !== false;
                         document.querySelector('#YtDlpOptionsJson').value = config.YtDlpOptionsJson || '{}';
                         Dashboard.hideLoadingMsg();
                         refreshYtDlpCheck();
@@ -392,6 +400,7 @@
                         config.DelaySeconds = parseInt(document.querySelector('#DelaySeconds').value, 10) || 3;
                         config.RetryDelaySeconds = parseInt(document.querySelector('#RetryDelaySeconds').value, 10) || 5;
                         config.MaxTrailersPerRun = parseInt(document.querySelector('#MaxTrailersPerRun').value, 10) || 0;
+                        config.UseTmdbOmdbFallback = document.querySelector('#UseTmdbOmdbFallback').checked;
                         config.YtDlpOptionsJson = document.querySelector('#YtDlpOptionsJson').value || '{}';
                         ApiClient.updatePluginConfiguration(pluginId, config).then(function(result) {
                             Dashboard.processPluginConfigurationUpdateResult(result);

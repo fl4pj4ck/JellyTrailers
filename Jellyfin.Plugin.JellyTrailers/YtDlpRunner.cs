@@ -330,4 +330,116 @@ public class YtDlpRunner
             return false;
         }
     }
+
+    /// <summary>
+    /// Download a trailer from a direct URL (e.g. from TMDB/OMDb metadata). Returns true if the output file exists after run.
+    /// </summary>
+    /// <param name="url">Direct trailer URL (YouTube, etc.).</param>
+    /// <param name="outputPath">Full path for the output trailer file.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>True if the trailer was downloaded and the file exists.</returns>
+    public async Task<bool> DownloadFromUrlAsync(
+        string url,
+        string outputPath,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(url))
+        {
+            _logger.LogWarning("DownloadFromUrlAsync: empty URL.");
+            return false;
+        }
+
+        var format = GetFormatForQuality();
+        var args = new List<string>
+        {
+            "-o", outputPath,
+            "--merge-output-format", "mp4",
+            "-f", format,
+            "--no-warnings",
+            "--no-progress",
+            url.Trim()
+        };
+
+        if (!string.IsNullOrWhiteSpace(_config.YtDlpOptionsJson))
+        {
+            try
+            {
+                var opts = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(_config.YtDlpOptionsJson);
+                if (opts != null)
+                {
+                    foreach (var (k, v) in opts)
+                    {
+                        var optName = (k ?? string.Empty).TrimStart('-');
+                        if (string.IsNullOrEmpty(optName)) continue;
+                        if (!AllowedYtDlpOptionNames.Contains(optName)) continue;
+                        var val = v.ValueKind == JsonValueKind.String ? v.GetString() : v.GetRawText();
+                        if (val != null)
+                        {
+                            args.Add("--" + optName);
+                            args.Add(val);
+                        }
+                    }
+                }
+            }
+            catch (JsonException)
+            {
+                _logger.LogDebug("Invalid YtDlpOptionsJson; ignoring for direct URL download.");
+            }
+        }
+
+        var exe = await GetEffectiveExePathAsync(cancellationToken).ConfigureAwait(false);
+        if (_applicationPaths != null && exe == YtDlpDownloadHelper.GetBundledExePath(_applicationPaths) && !File.Exists(exe))
+        {
+            _logger.LogWarning("yt-dlp could not be downloaded; skipping.");
+            return false;
+        }
+
+        var startInfo = new ProcessStartInfo
+        {
+            FileName = exe,
+            WorkingDirectory = Path.GetTempPath(),
+            UseShellExecute = false,
+            CreateNoWindow = true,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true
+        };
+        foreach (var a in args)
+            startInfo.ArgumentList.Add(a);
+
+        try
+        {
+            using var process = Process.Start(startInfo);
+            if (process == null)
+            {
+                _logger.LogWarning("Failed to start yt-dlp for URL: {Url}", url);
+                return false;
+            }
+
+            var stderrTask = process.StandardError.ReadToEndAsync(cancellationToken);
+            var stdoutTask = process.StandardOutput.ReadToEndAsync(cancellationToken);
+            await process.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
+            var stderr = (await stderrTask.ConfigureAwait(false)) ?? "";
+            var stdout = (await stdoutTask.ConfigureAwait(false)) ?? "";
+
+            if (process.ExitCode != 0)
+            {
+                var reason = string.IsNullOrWhiteSpace(stderr) ? stdout : stderr;
+                _logger.LogWarning("yt-dlp failed for URL \"{Url}\": {Reason}", url, (reason ?? "").Trim());
+                return false;
+            }
+
+            if (!File.Exists(outputPath))
+            {
+                _logger.LogWarning("yt-dlp succeeded but file missing for URL \"{Url}\".", url);
+                return false;
+            }
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "yt-dlp failed for URL \"{Url}\": {Message}", url, ex.Message);
+            return false;
+        }
+    }
 }

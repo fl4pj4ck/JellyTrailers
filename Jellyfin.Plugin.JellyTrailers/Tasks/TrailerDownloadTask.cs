@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Jellyfin.Plugin.JellyTrailers.Configuration;
 using MediaBrowser.Common.Configuration;
+using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Plugins;
 using MediaBrowser.Model.Tasks;
@@ -125,6 +126,19 @@ public class TrailerDownloadTask : IScheduledTask
                     ok = await ytDlp.DownloadOneAsync(entry, outputPath, cancellationToken).ConfigureAwait(false);
                 }
 
+                // TMDB/OMDb fallback: when YouTube download fails, try first trailer URL from Jellyfin metadata
+                if (!ok && _config.UseTmdbOmdbFallback)
+                {
+                    var fallbackUrl = GetFirstRemoteTrailerUrl(entry.Path);
+                    if (!string.IsNullOrWhiteSpace(fallbackUrl))
+                    {
+                        _logger.LogInformation("Trying TMDB/OMDb fallback for: {Query}", query);
+                        ok = await ytDlp.DownloadFromUrlAsync(fallbackUrl, outputPath, cancellationToken).ConfigureAwait(false);
+                        if (ok)
+                            _logger.LogInformation("Trailer downloaded via TMDB/OMDb fallback: {Path}", entry.Path);
+                    }
+                }
+
                 if (ok)
                     processed++;
                 else
@@ -147,6 +161,28 @@ public class TrailerDownloadTask : IScheduledTask
             _logger.LogInformation("JellyTrailers run finished: {Processed} downloaded, {Failed} failed, {Skipped} skipped.", processed, failed, skipped);
             statsStore.RecordRun(processed, failed);
             LibraryScanHelper.QueueLibraryScan(_libraryManager, _logger);
+        }
+    }
+
+    /// <summary>
+    /// Resolves the library item by path and returns the first remote trailer URL from metadata (TMDB/OMDb), or null.
+    /// </summary>
+    private string? GetFirstRemoteTrailerUrl(string folderPath)
+    {
+        try
+        {
+            var item = _libraryManager.FindByPath(folderPath, true);
+            var trailers = item?.RemoteTrailers;
+            if (trailers == null || trailers.Count == 0)
+                return null;
+            var first = trailers[0];
+            var url = first?.Url?.Trim();
+            return string.IsNullOrEmpty(url) ? null : url;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogDebug(ex, "Could not get remote trailer URL for path: {Path}", folderPath);
+            return null;
         }
     }
 

@@ -3,7 +3,7 @@
 name: JellyTrailers
 # guid must match PluginConstants.PluginId
 guid: a1b2c3d4-e5f6-7890-abcd-ef1234567890
-version: 1.1.6
+version: 1.2.0
 targetAbi: 10.10.0
 framework: net8.0
 owner: fl4pj4ck
@@ -16,6 +16,8 @@ description: |
   Configure in Dashboard → Plugins → JellyTrailers; scheduled task runs daily by default.
 category: General
 changelog: |
+  1.2.0
+  - TMDB/OMDb fallback: when download from YouTube fails, try first trailer URL from Jellyfin metadata. New setting "Use TMDB/OMDb fallback when YouTube fails" (enabled by default).
   1.1.6
   - Schedule time: config page normalizes TriggerInfo/Triggers (array or single object) so read/write works across 10.10 and 10.11+.
   1.1.5
