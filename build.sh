@@ -48,10 +48,12 @@ DOTNET_DIR="${DOTNET_INSTALL_DIR:-$HOME/.dotnet}"
 # --- Prerequisites: dotnet (8.0 + 9.0) and podman ---
 ensure_dotnet() {
   export PATH="$DOTNET_DIR:$PATH"
-  if command -v dotnet &>/dev/null && dotnet --list-sdks 2>/dev/null | grep -qE '^9\.'; then
+  local sdks
+  sdks=$(dotnet --list-sdks 2>/dev/null || true)
+  if command -v dotnet &>/dev/null && echo "$sdks" | grep -qE '^8\.' && echo "$sdks" | grep -qE '^9\.'; then
     return 0
   fi
-  echo " .NET 9 SDK not found; installing .NET 8 and 9 SDKs to $DOTNET_DIR ..."
+  echo " .NET 8 and/or 9 SDK not found; installing .NET 8 and 9 SDKs to $DOTNET_DIR ..."
   if ! command -v curl &>/dev/null; then
     echo "Error: curl required to install .NET SDK. Install curl or install .NET 8+9 SDK manually." >&2
     exit 1
@@ -65,7 +67,12 @@ ensure_dotnet() {
     echo "Error: dotnet not available after install. Add to PATH: export PATH=\"$DOTNET_DIR:\$PATH\"" >&2
     exit 1
   fi
-  if ! dotnet --list-sdks 2>/dev/null | grep -qE '^9\.'; then
+  sdks=$(dotnet --list-sdks 2>/dev/null || true)
+  if ! echo "$sdks" | grep -qE '^8\.'; then
+    echo "Error: .NET 8 SDK still not available. net8.0 build (Jellyfin 10.10) will fail." >&2
+    exit 1
+  fi
+  if ! echo "$sdks" | grep -qE '^9\.'; then
     echo "Error: .NET 9 SDK still not available. Build will work for Jellyfin 10.10 only." >&2
   fi
 }
@@ -129,9 +136,10 @@ if [[ "$NOW" -eq 1 ]]; then
     echo "Error: manifest.json not found at $MANIFEST_JSON" >&2
     exit 1
   fi
-  PLUGIN_VERSION=$(jq -r '.[0].versions[0].version' "$MANIFEST_JSON" 2>/dev/null)
+  # Manifest has oldest-first (for Jellyfin catalog); latest = last entry
+  PLUGIN_VERSION=$(jq -r '.[0].versions[-1].version' "$MANIFEST_JSON" 2>/dev/null)
   if [[ -z "$PLUGIN_VERSION" || "$PLUGIN_VERSION" == "null" ]]; then
-    echo "Error: Could not read version from manifest.json (first entry = latest in .versions). Install jq or fix manifest." >&2
+    echo "Error: Could not read version from manifest.json (last entry = latest in .versions). Install jq or fix manifest." >&2
     exit 1
   fi
   # Git tag: 1.0.1.0 -> v1.0.1 (drop trailing .0)
@@ -165,25 +173,35 @@ if [[ "$NOW" -eq 1 ]]; then
   fi
 
   # Commit and push before creating release (zips are gitignored)
+  # Use "Release" only when we will create a new release; else "Update manifest checksums"
+  RELEASE_EXISTS=0
+  if command -v gh &>/dev/null && gh release view "$RELEASE_TAG" &>/dev/null; then
+    RELEASE_EXISTS=1
+  fi
   git add .
   if ! git diff --staged --quiet 2>/dev/null; then
-    git commit -m "Release $RELEASE_TAG"
+    if [[ "$RELEASE_EXISTS" -eq 1 ]]; then
+      git commit -m "Update manifest checksums for $RELEASE_TAG"
+    else
+      git commit -m "Release $RELEASE_TAG"
+    fi
   fi
   git push
 
   # Create GitHub release if this version does not have one yet (requires gh)
   if command -v gh &>/dev/null; then
-    if gh release view "$RELEASE_TAG" &>/dev/null; then
+    if [[ "$RELEASE_EXISTS" -eq 1 ]]; then
       echo "Release $RELEASE_TAG already exists; zips are in releases/. Up version in manifest.json and re-run to publish a new release."
     else
-      RELEASE_NOTES=$(jq -r '.[0].versions[0].changelog' "$MANIFEST_JSON" 2>/dev/null)
+      RELEASE_NOTES=$(jq -r '.[0].versions[-1].changelog' "$MANIFEST_JSON" 2>/dev/null)
       [[ -z "$RELEASE_NOTES" || "$RELEASE_NOTES" == "null" ]] && RELEASE_NOTES="Release $RELEASE_TAG"
       echo "Creating GitHub release $RELEASE_TAG..."
+      # Use --notes-file so special chars (quotes, etc.) in changelog don't break the shell
       gh release create "$RELEASE_TAG" \
         "$RELEASES_DIR/$ZIP_10_10" \
         "$RELEASES_DIR/$ZIP_10_12" \
         --title "$RELEASE_TAG" \
-        --notes "$RELEASE_NOTES"
+        --notes-file <(printf '%s' "$RELEASE_NOTES")
       echo "Done. Release: $(gh release view "$RELEASE_TAG" --json url -q .url 2>/dev/null || echo "$RELEASE_TAG")"
     fi
   else
@@ -324,7 +342,8 @@ fi
 # --- Zips into releases/ (version from manifest) ---
 RELEASES_DIR="$SCRIPT_DIR/releases"
 MANIFEST_JSON="$SCRIPT_DIR/manifest.json"
-PLUGIN_VERSION=$(jq -r '.[0].versions[0].version' "$MANIFEST_JSON" 2>/dev/null)
+# Manifest has oldest-first; latest = last entry
+PLUGIN_VERSION=$(jq -r '.[0].versions[-1].version' "$MANIFEST_JSON" 2>/dev/null)
 if [[ -n "$PLUGIN_VERSION" && "$PLUGIN_VERSION" != "null" ]]; then
   mkdir -p "$RELEASES_DIR"
   if [[ -f "$BUILD_DIR/net8.0/$PLUGIN_NAME.dll" ]]; then
