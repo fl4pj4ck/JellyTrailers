@@ -8,10 +8,10 @@ See **[Jellyfin.Plugin.JellyTrailers/README.md](Jellyfin.Plugin.JellyTrailers/RE
 
 ## Install
 
-1. **Dashboard → Plugins → Repositories** → Add: `https://cdn.jsdelivr.net/gh/fl4pj4ck/JellyTrailers@main/manifest.json`
+1. **Dashboard → Plugins → Repositories** → Add: `https://raw.githubusercontent.com/fl4pj4ck/JellyTrailers/main/manifest.json`
 2. **Dashboard → Plugins** → Install and enable **JellyTrailers**, then configure.
 
-Not in catalog? Use the jsDelivr URL; remove and re-add the repo; check logs. Manual: build (below), copy plugin folder into Jellyfin’s `plugins` directory, restart, enable. [build.sh](build.sh) can build and copy into a Podman container.
+If the plugin doesn’t appear, remove and re-add the repository (same URL) and check server logs. **Manual install:** build (below), copy the plugin folder into Jellyfin’s `plugins` directory, restart, then enable. [build.sh](build.sh) can build and copy into a Podman container.
 
 ## Build
 
@@ -21,7 +21,7 @@ dotnet build Jellyfin.Plugin.JellyTrailers.sln -c Release
 
 ## Release
 
-From repo root: `./build.sh -now` (reads version from first entry in [manifest.json](manifest.json), builds net8.0 + net9.0, zips in `releases/`, creates GitHub release if missing). Requires `jq` and `gh`. Manifest `versions` must be **newest first** so Jellyfin shows the latest; after adding entries, re-sort with: `jq '.[0].versions |= (sort_by(.version | split(".") | map(tonumber? // 0)) | reverse)' manifest.json > m.tmp && mv m.tmp manifest.json`.
+From repo root: `./build.sh -now` — reads the latest version from the last entry in [manifest.json](manifest.json), builds net8.0 and net9.0, creates zips in `releases/`, and creates a GitHub release if it doesn’t exist. Requires `jq` and `gh`. In manifest.json, keep `versions` **oldest first** so the Jellyfin catalog offers the latest version for install.
 
 ## License
 

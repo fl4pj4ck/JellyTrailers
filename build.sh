@@ -172,6 +172,14 @@ if [[ "$NOW" -eq 1 ]]; then
     echo "Updated manifest.json checksums for $PLUGIN_VERSION"
   fi
 
+  # Ensure manifest has multiple versions so catalog/CDN (e.g. jsDelivr) offers more than 1.0.0.0
+  VERSION_ENTRIES=$(jq -r '.[0].versions | length' "$MANIFEST_JSON" 2>/dev/null || echo "0")
+  if [[ -n "$VERSION_ENTRIES" && "$VERSION_ENTRIES" != "null" && "$VERSION_ENTRIES" -le 3 ]]; then
+    echo "Error: manifest.json has only $VERSION_ENTRIES version entry/entries. Jellyfin catalog and CDN will only offer one version." >&2
+    echo "Add all version entries (oldest first) to manifest.json, then re-run. See existing plugins' manifests for format." >&2
+    exit 1
+  fi
+
   # Commit and push before creating release (zips are gitignored)
   # Use "Release" only when we will create a new release; else "Update manifest checksums"
   RELEASE_EXISTS=0
