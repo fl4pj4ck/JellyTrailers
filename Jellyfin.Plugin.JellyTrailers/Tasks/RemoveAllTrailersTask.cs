@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Jellyfin.Plugin.JellyTrailers.Configuration;
+using Jellyfin.Plugin.JellyTrailers;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Tasks;
 using Microsoft.Extensions.Logging;
@@ -13,22 +14,21 @@ namespace Jellyfin.Plugin.JellyTrailers.Tasks;
 /// </summary>
 public class RemoveAllTrailersTask : IScheduledTask
 {
-    private readonly PluginConfiguration _config;
     private readonly ILibraryManager _libraryManager;
     private readonly ILogger<RemoveAllTrailersTask> _logger;
     private readonly ILoggerFactory _loggerFactory;
 
     public RemoveAllTrailersTask(
-        PluginConfiguration config,
         ILibraryManager libraryManager,
         ILogger<RemoveAllTrailersTask> logger,
         ILoggerFactory loggerFactory)
     {
-        _config = config;
         _libraryManager = libraryManager;
         _logger = logger;
         _loggerFactory = loggerFactory;
     }
+
+    private static PluginConfiguration Config => Plugin.Instance!.Configuration;
 
     /// <inheritdoc />
     public string Name => "Remove All Trailers (JellyTrailers)";
@@ -45,11 +45,11 @@ public class RemoveAllTrailersTask : IScheduledTask
     /// <inheritdoc />
     public Task ExecuteAsync(IProgress<double> progress, CancellationToken cancellationToken)
     {
-        var trailerPath = _config.GetEffectiveTrailerPath();
+        var trailerPath = Config.GetEffectiveTrailerPath();
         var scanner = new LibraryScanner(_libraryManager, _loggerFactory.CreateLogger<LibraryScanner>());
 
-        var includeNames = _config.GetIncludeLibraryNamesSet();
-        var excludeNames = _config.GetExcludeLibraryNamesSet();
+        var includeNames = Config.GetIncludeLibraryNamesSet();
+        var excludeNames = Config.GetExcludeLibraryNamesSet();
         var roots = scanner.GetLibraryRoots(
             includeNames.Count > 0 ? includeNames : null,
             excludeNames.Count > 0 ? excludeNames : null);

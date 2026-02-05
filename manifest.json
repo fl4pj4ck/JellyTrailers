@@ -9,6 +9,30 @@
     "imageUrl": "https://raw.githubusercontent.com/fl4pj4ck/JellyTrailers/main/assets/icon.png",
     "versions": [
       {
+        "version": "1.3.4.0",
+        "changelog": "1.3.4: Release.",
+        "targetAbi": "10.12.0.0",
+        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.3.4/JellyTrailers_1.3.4.0_10.12.zip",
+        "checksum": "6a83b1bbc106770da2c5440d2e81e0ca",
+        "timestamp": "2025-02-05T00:00:00Z"
+      },
+      {
+        "version": "1.3.4.0",
+        "changelog": "1.3.4: Release.",
+        "targetAbi": "10.11.0.0",
+        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.3.4/JellyTrailers_1.3.4.0_10.12.zip",
+        "checksum": "6a83b1bbc106770da2c5440d2e81e0ca",
+        "timestamp": "2025-02-05T00:00:00Z"
+      },
+      {
+        "version": "1.3.4.0",
+        "changelog": "1.3.4: Release.",
+        "targetAbi": "10.10.0.0",
+        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.3.4/JellyTrailers_1.3.4.0.zip",
+        "checksum": "084e06ff7097411a8a9d1e3be2039b90",
+        "timestamp": "2025-02-05T00:00:00Z"
+      },
+      {
         "version": "1.3.3.0",
         "changelog": "1.3.3: Release.",
         "targetAbi": "10.12.0.0",

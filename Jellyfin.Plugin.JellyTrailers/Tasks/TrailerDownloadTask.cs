@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Jellyfin.Plugin.JellyTrailers;
 using Jellyfin.Plugin.JellyTrailers.Configuration;
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Controller.Entities;
@@ -17,7 +18,6 @@ namespace Jellyfin.Plugin.JellyTrailers.Tasks;
 /// </summary>
 public class TrailerDownloadTask : IScheduledTask
 {
-    private readonly PluginConfiguration _config;
     private readonly ILibraryManager _libraryManager;
     private readonly ILogger<TrailerDownloadTask> _logger;
     private readonly ILoggerFactory _loggerFactory;
@@ -25,20 +25,20 @@ public class TrailerDownloadTask : IScheduledTask
     private readonly IHttpClientFactory _httpClientFactory;
 
     public TrailerDownloadTask(
-        PluginConfiguration config,
         ILibraryManager libraryManager,
         ILogger<TrailerDownloadTask> logger,
         ILoggerFactory loggerFactory,
         IApplicationPaths applicationPaths,
         IHttpClientFactory httpClientFactory)
     {
-        _config = config;
         _libraryManager = libraryManager;
         _logger = logger;
         _loggerFactory = loggerFactory;
         _applicationPaths = applicationPaths;
         _httpClientFactory = httpClientFactory;
     }
+
+    private static PluginConfiguration Config => Plugin.Instance!.Configuration;
 
     /// <inheritdoc />
     public string Name => "Download Trailers (JellyTrailers)";
@@ -57,11 +57,11 @@ public class TrailerDownloadTask : IScheduledTask
     {
         var scanner = new LibraryScanner(_libraryManager, _loggerFactory.CreateLogger<LibraryScanner>());
         var statsStore = new TrailerStatsStore(_applicationPaths, _loggerFactory.CreateLogger<TrailerStatsStore>());
-        var ytDlp = new YtDlpRunner(_config, _applicationPaths, _loggerFactory.CreateLogger<YtDlpRunner>(), _httpClientFactory);
+        var ytDlp = new YtDlpRunner(Config, _applicationPaths, _loggerFactory.CreateLogger<YtDlpRunner>(), _httpClientFactory);
 
         // 1. Get library roots and scan filesystem (no persistent list; order by folder mtime so newer items first)
-        var includeNames = _config.GetIncludeLibraryNamesSet();
-        var excludeNames = _config.GetExcludeLibraryNamesSet();
+        var includeNames = Config.GetIncludeLibraryNamesSet();
+        var excludeNames = Config.GetExcludeLibraryNamesSet();
         var roots = scanner.GetLibraryRoots(
             includeNames.Count > 0 ? includeNames : null,
             excludeNames.Count > 0 ? excludeNames : null);
@@ -76,7 +76,7 @@ public class TrailerDownloadTask : IScheduledTask
         _logger.LogInformation("Scanned {Count} library folders.", currentEntries.Count);
 
         // 2. Entries that need a trailer (file doesn't exist), newest folders first (by directory mtime)
-        var trailerPath = _config.GetEffectiveTrailerPath();
+        var trailerPath = Config.GetEffectiveTrailerPath();
         var needs = currentEntries
             .Where(e => !EntryHasTrailer(e.Path, trailerPath))
             .OrderByDescending(e => GetFolderSortTime(e.Path))
@@ -86,7 +86,7 @@ public class TrailerDownloadTask : IScheduledTask
         statsStore.RecordFolderCounts(currentEntries.Count, foldersWithTrailer);
 
         var skipped = foldersWithTrailer;
-        var maxPerRun = _config.MaxTrailersPerRun;
+        var maxPerRun = Config.MaxTrailersPerRun;
         if (maxPerRun > 0 && needs.Count > maxPerRun)
             needs = needs.Take(maxPerRun).ToList();
 
@@ -99,14 +99,14 @@ public class TrailerDownloadTask : IScheduledTask
             return;
         }
 
-        var delayMs = Math.Max(0, _config.DelaySeconds) * 1000;
-        var retryDelayMs = Math.Max(0, _config.RetryDelaySeconds) * 1000;
+        var delayMs = Math.Max(0, Config.DelaySeconds) * 1000;
+        var retryDelayMs = Math.Max(0, Config.RetryDelaySeconds) * 1000;
         var processed = 0;
         var failed = 0;
 
         _logger.LogInformation(
             "Trailer task: {Count} to process (skipped {Skipped} already have trailer), delay {Delay}s between items.",
-            needs.Count, skipped, _config.DelaySeconds);
+            needs.Count, skipped, Config.DelaySeconds);
 
         try
         {
@@ -131,7 +131,7 @@ public class TrailerDownloadTask : IScheduledTask
                 }
 
                 // TMDB/OMDb fallback: when YouTube download fails, try first trailer URL from Jellyfin metadata
-                if (!ok && _config.UseTmdbOmdbFallback)
+                if (!ok && Config.UseTmdbOmdbFallback)
                 {
                     var fallbackUrl = GetFirstRemoteTrailerUrl(entry.Path);
                     if (!string.IsNullOrWhiteSpace(fallbackUrl))
