@@ -323,15 +323,43 @@ else
   fi
 fi
 
-# --- Remove only (if -remove): wipe both plugin dirs and exit ---
+# --- Remove only (if -remove): wipe plugin dirs, plugin manifest, config/data, then restart container ---
 if [[ "$REMOVE" -eq 1 ]]; then
-  echo "Removing plugin dirs from container (Trailers + JellyTrailers)..."
+  echo "Removing plugin from container (Trailers + JellyTrailers)..."
   for dir in "$OLD_PLUGIN_NAME" "$PLUGIN_NAME"; do
+    if podman exec "$CONTAINER" test -f "$CONTAINER_PLUGINS_PATH/$dir/manifest.json" 2>/dev/null; then
+      podman exec "$CONTAINER" rm -f "$CONTAINER_PLUGINS_PATH/$dir/manifest.json"
+      echo "  Removed $CONTAINER_PLUGINS_PATH/$dir/manifest.json"
+    fi
     if podman exec "$CONTAINER" test -d "$CONTAINER_PLUGINS_PATH/$dir" 2>/dev/null; then
       podman exec "$CONTAINER" rm -rf "$CONTAINER_PLUGINS_PATH/$dir"
       echo "  Removed $CONTAINER_PLUGINS_PATH/$dir"
     fi
   done
+  # Root-level plugin manifest (some installs leave a manifest at plugins root)
+  if podman exec "$CONTAINER" test -f "$CONTAINER_PLUGINS_PATH/manifest.json" 2>/dev/null; then
+    podman exec "$CONTAINER" rm -f "$CONTAINER_PLUGINS_PATH/manifest.json"
+    echo "  Removed $CONTAINER_PLUGINS_PATH/manifest.json"
+  fi
+  # Plugin config/data (stats.json, yt-dlp cache, etc.) lives under plugins/configurations/PluginName
+  PLUGIN_CONFIG_DIR="$CONTAINER_PLUGINS_PATH/configurations/JellyTrailers"
+  if podman exec "$CONTAINER" test -d "$PLUGIN_CONFIG_DIR" 2>/dev/null; then
+    podman exec "$CONTAINER" rm -rf "$PLUGIN_CONFIG_DIR"
+    echo "  Removed $PLUGIN_CONFIG_DIR"
+  fi
+  # Plugin configuration XML (Jellyfin may store per-plugin config by assembly name)
+  for xml in "Jellyfin.Plugin.JellyTrailers.xml" "JellyTrailers.xml"; do
+    if podman exec "$CONTAINER" test -f "$CONTAINER_PLUGINS_PATH/configurations/$xml" 2>/dev/null; then
+      podman exec "$CONTAINER" rm -f "$CONTAINER_PLUGINS_PATH/configurations/$xml"
+      echo "  Removed $CONTAINER_PLUGINS_PATH/configurations/$xml"
+    fi
+  done
+  echo "Restarting container so Jellyfin drops the plugin from its list (allows clean reinstall)..."
+  if podman restart "$CONTAINER" 2>/dev/null; then
+    echo "Container restarted."
+  else
+    echo "Restart failed or container not running. Restart manually: podman restart $CONTAINER"
+  fi
   echo "Done. No build or install."
   exit 0
 fi
