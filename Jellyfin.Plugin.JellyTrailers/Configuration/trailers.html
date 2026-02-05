@@ -94,6 +94,19 @@
             box-sizing: border-box;
         }
         .trailers-ytdlp-ok.hidden { display: none !important; }
+        .trailers-notice {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-left: 4px solid rgba(255,255,255,0.35);
+            border-radius: 6px;
+            padding: 0.75rem 1rem;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            line-height: 1.45;
+            color: rgba(255,255,255,0.85);
+            box-sizing: border-box;
+        }
+        .trailers-notice.hidden { display: none !important; }
     </style>
 </head>
 <body>
@@ -107,13 +120,13 @@
                     </div>
                     <p class="trailers-intro" style="color: rgba(255,255,255,0.75); font-size: 0.9rem; line-height: 1.5; margin-bottom: 1.5rem;">Download movie and TV show trailers with yt-dlp and place them next to your media. Run the scheduled task &quot;Download Trailers&quot; from Dashboard → Scheduled Tasks (set the schedule there).</p>
 
-                    <div id="JellyTrailersPathCorrectedNotice" class="trailers-ytdlp-ok hidden" style="background: rgba(251,191,36,0.15); border-left-color: #f59e0b; margin-bottom: 1rem;" role="status">
+                    <div id="JellyTrailersPathCorrectedNotice" class="trailers-notice hidden" role="status">
                         Trailer path was corrected to <strong>trailer.mp4</strong> (only relative paths are allowed; no &quot;..&quot; or absolute paths).
                     </div>
-                    <div id="JellyTrailersYtDlpJsonInvalidNotice" class="trailers-ytdlp-ok hidden" style="background: rgba(251,191,36,0.15); border-left-color: #f59e0b; margin-bottom: 1rem;" role="status">
+                    <div id="JellyTrailersYtDlpJsonInvalidNotice" class="trailers-notice hidden" role="status">
                         Extra yt-dlp options (JSON) was invalid on last load; it was ignored. Fix the JSON below or leave as <code>{}</code>.
                     </div>
-                    <div id="JellyTrailersStatsCorruptedNotice" class="trailers-ytdlp-ok hidden" style="background: rgba(251,191,36,0.15); border-left-color: #f59e0b; margin-bottom: 1rem;" role="status">
+                    <div id="JellyTrailersStatsCorruptedNotice" class="trailers-notice hidden" role="status">
                         Statistics were reset due to a file error.
                     </div>
 
@@ -135,9 +148,9 @@
                     <div class="trailers-card" id="JellyTrailersStatsCard" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 1.25rem; margin-bottom: 1.5rem;">
                         <h3 style="margin: 0 0 1rem 0; font-size: 1rem; font-weight: 600; color: rgba(255,255,255,0.9);">Statistics</h3>
                         <div id="JellyTrailersStatsContent">Loading stats…</div>
-                        <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.08);">
-                            <p class="fieldDescription" style="margin: 0 0 0.5rem 0;">Clear downloaded/failed counts and run history.</p>
-                            <button type="button" id="BtnResetStats" is="emby-button" class="emby-button" style="padding: 0.35rem 0.75rem; font-size: 0.875rem;">Reset statistics</button>
+                        <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.08); display: flex; flex-direction: column; align-items: flex-end; gap: 0.5rem;">
+                            <p class="fieldDescription" style="margin: 0;">Clear downloaded/failed counts and run history.</p>
+                            <button type="button" id="BtnResetStats" is="emby-button" class="emby-button" style="padding: 0.35rem 0.75rem; font-size: 0.875rem; background: #fbbf24; color: #000;">Reset statistics</button>
                         </div>
                     </div>
 
@@ -251,7 +264,6 @@
                     var totalF = stats.totalFailed || 0;
                     var d7 = stats.last7Days || 0;
                     var d30 = stats.last30Days || 0;
-                    var d365 = stats.last365Days || 0;
                     var runs = stats.totalRuns != null ? stats.totalRuns : 0;
                     var totalFolders = stats.totalFolders || 0;
                     var withTrailer = stats.foldersWithTrailer || 0;
@@ -274,7 +286,6 @@
                         '<div style="' + boxStyle + '"><div style="' + labelStyle + '">Total downloaded</div><div style="' + valueGreen + '">' + totalD + '</div></div>' +
                         '<div style="' + boxStyle + '"><div style="' + labelStyle + '">Last 7 days</div><div style="' + valueGreen + '">' + d7 + '</div></div>' +
                         '<div style="' + boxStyle + '"><div style="' + labelStyle + '">Last 30 days</div><div style="' + valueGreen + '">' + d30 + '</div></div>' +
-                        '<div style="' + boxStyle + '"><div style="' + labelStyle + '">Last year</div><div style="' + valueGreen + '">' + d365 + '</div></div>' +
                         '<div style="' + boxStyle + '"><div style="' + labelStyle + '">Failed (total)</div><div style="' + valueWarn + '">' + totalF + '</div></div>' +
                         '<div style="' + boxStyle + '"><div style="' + labelStyle + '">Task runs</div><div style="' + valueMuted + '">' + runs + '</div></div>' +
                         '</div>';
