@@ -15,7 +15,7 @@
 #   -remove   Remove both Jellyfin.Plugin.Trailers and Jellyfin.Plugin.JellyTrailers from
 #             the container's plugins folder and exit (no build, no install).
 #   -now      Build the plugin, create zips in releases/, and create a GitHub release if the
-#             version (from manifest.json last .versions[] entry) does not yet have a release.
+#             version (from manifest.json first .versions[] entry, latest-first) does not yet have a release.
 #             Requires: jq, gh (GitHub CLI). No container copy.
 #   CONTAINER: Podman container name or ID (default: $JELLYFIN_CONTAINER or "jellyfin")
 #
@@ -46,34 +46,66 @@ BUILD_DIR="Jellyfin.Plugin.JellyTrailers/bin/Release"
 DOTNET_DIR="${DOTNET_INSTALL_DIR:-$HOME/.dotnet}"
 
 # --- Prerequisites: dotnet (8.0 + 9.0) and podman ---
+# Uses DOTNET_DIR for installs so we have both SDKs regardless of system dotnet.
 ensure_dotnet() {
-  export PATH="$DOTNET_DIR:$PATH"
-  local sdks
-  sdks=$(dotnet --list-sdks 2>/dev/null || true)
-  if command -v dotnet &>/dev/null && echo "$sdks" | grep -qE '^8\.' && echo "$sdks" | grep -qE '^9\.'; then
-    return 0
+  local need_install=0
+  local dotnet_exe="$DOTNET_DIR/dotnet"
+
+  # Prefer dotnet from DOTNET_DIR so we use a consistent install (with both SDKs)
+  if [[ -x "$dotnet_exe" ]]; then
+    export PATH="$DOTNET_DIR:$PATH"
+    local sdks
+    sdks=$("$dotnet_exe" --list-sdks 2>/dev/null || true)
+    if echo "$sdks" | grep -qE '^8\.' && echo "$sdks" | grep -qE '^9\.'; then
+      return 0
+    fi
+    need_install=1
+  else
+    # No install yet, or system dotnet: check if system has both 8 and 9
+    export PATH="$DOTNET_DIR:$PATH"
+    local sdks
+    sdks=$(dotnet --list-sdks 2>/dev/null || true)
+    if command -v dotnet &>/dev/null && echo "$sdks" | grep -qE '^8\.' && echo "$sdks" | grep -qE '^9\.'; then
+      return 0
+    fi
+    need_install=1
   fi
-  echo " .NET 8 and/or 9 SDK not found; installing .NET 8 and 9 SDKs to $DOTNET_DIR ..."
+
+  if [[ "$need_install" -eq 0 ]]; then return 0; fi
+
+  echo " .NET 8 and/or 9 SDK not found; downloading and installing to $DOTNET_DIR ..."
   if ! command -v curl &>/dev/null; then
     echo "Error: curl required to install .NET SDK. Install curl or install .NET 8+9 SDK manually." >&2
     exit 1
   fi
   mkdir -p "$DOTNET_DIR"
-  curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel 8.0 --install-dir "$DOTNET_DIR" --no-path
+
+  has_sdk() { [[ -x "$dotnet_exe" ]] && "$dotnet_exe" --list-sdks 2>/dev/null | grep -qE "^$1\."; }
+  if ! has_sdk 8; then
+    echo " Installing .NET 8 SDK..."
+    curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel 8.0 --install-dir "$DOTNET_DIR" --no-path
+  fi
   export PATH="$DOTNET_DIR:$PATH"
-  curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel 9.0 --install-dir "$DOTNET_DIR" --no-path
+
+  if ! has_sdk 9; then
+    echo " Installing .NET 9 SDK..."
+    curl -sSL https://dot.net/v1/dotnet-install.sh | bash /dev/stdin --channel 9.0 --install-dir "$DOTNET_DIR" --no-path
+  fi
   export PATH="$DOTNET_DIR:$PATH"
-  if ! command -v dotnet &>/dev/null; then
-    echo "Error: dotnet not available after install. Add to PATH: export PATH=\"$DOTNET_DIR:\$PATH\"" >&2
+
+  if [[ ! -x "$dotnet_exe" ]]; then
+    echo "Error: dotnet not available after install at $dotnet_exe" >&2
     exit 1
   fi
-  sdks=$(dotnet --list-sdks 2>/dev/null || true)
-  if ! echo "$sdks" | grep -qE '^8\.'; then
-    echo "Error: .NET 8 SDK still not available. net8.0 build (Jellyfin 10.10) will fail." >&2
+  local sdks_after
+  sdks_after=$("$dotnet_exe" --list-sdks 2>/dev/null || true)
+  if ! echo "$sdks_after" | grep -qE '^8\.'; then
+    echo "Error: .NET 8 SDK still not available after install." >&2
     exit 1
   fi
-  if ! echo "$sdks" | grep -qE '^9\.'; then
-    echo "Error: .NET 9 SDK still not available. Build will work for Jellyfin 10.10 only." >&2
+  if ! echo "$sdks_after" | grep -qE '^9\.'; then
+    echo "Error: .NET 9 SDK still not available after install. Install manually or check network." >&2
+    exit 1
   fi
 }
 
@@ -122,8 +154,18 @@ update_manifest_checksums() {
     )' "$manifest" > "${manifest}.tmp" && mv "${manifest}.tmp" "$manifest"
 }
 
+# --- Sort manifest.json .versions from latest down (by version number descending) ---
+sort_manifest_versions() {
+  local manifest="$1"
+  [[ ! -f "$manifest" ]] && return
+  if ! command -v jq &>/dev/null; then return; fi
+  jq '.[0].versions |= (sort_by(.version | split(".") | map(tonumber? // 0)) | reverse)' "$manifest" > "${manifest}.tmp" && mv "${manifest}.tmp" "$manifest"
+}
+
 echo "Checking prerequisites..."
 ensure_dotnet
+# Use installed dotnet (DOTNET_DIR) for all builds so both 8 and 9 are available
+export PATH="$DOTNET_DIR:$PATH"
 if [[ "$NOW" -eq 0 ]]; then
   ensure_podman
 fi
@@ -136,10 +178,11 @@ if [[ "$NOW" -eq 1 ]]; then
     echo "Error: manifest.json not found at $MANIFEST_JSON" >&2
     exit 1
   fi
-  # Manifest has oldest-first (for Jellyfin catalog); latest = last entry
-  PLUGIN_VERSION=$(jq -r '.[0].versions[-1].version' "$MANIFEST_JSON" 2>/dev/null)
+  sort_manifest_versions "$MANIFEST_JSON"
+  # Manifest sorted latest-first; latest = first entry
+  PLUGIN_VERSION=$(jq -r '.[0].versions[0].version' "$MANIFEST_JSON" 2>/dev/null)
   if [[ -z "$PLUGIN_VERSION" || "$PLUGIN_VERSION" == "null" ]]; then
-    echo "Error: Could not read version from manifest.json (last entry = latest in .versions). Install jq or fix manifest." >&2
+    echo "Error: Could not read version from manifest.json (first entry = latest in .versions). Install jq or fix manifest." >&2
     exit 1
   fi
   # Git tag: 1.0.1.0 -> v1.0.1 (drop trailing .0)
@@ -147,8 +190,8 @@ if [[ "$NOW" -eq 1 ]]; then
 
   echo "Building $PLUGIN_NAME for release (net8.0 + net9.0) — version $PLUGIN_VERSION from manifest..."
   # Build each framework separately so restore/assets work for both (avoids NETSDK1005 on net9.0)
-  dotnet build Jellyfin.Plugin.JellyTrailers/Jellyfin.Plugin.JellyTrailers.csproj -c Release -v q -f net8.0
-  dotnet build Jellyfin.Plugin.JellyTrailers/Jellyfin.Plugin.JellyTrailers.csproj -c Release -v q -f net9.0
+  dotnet build Jellyfin.Plugin.JellyTrailers/Jellyfin.Plugin.JellyTrailers.csproj -p:Configuration=Release -v q -f net8.0
+  dotnet build Jellyfin.Plugin.JellyTrailers/Jellyfin.Plugin.JellyTrailers.csproj -p:Configuration=Release -v q -f net9.0
   OUT_NET8="$BUILD_DIR/net8.0"
   OUT_NET9="$BUILD_DIR/net9.0"
   for dir in "$OUT_NET8" "$OUT_NET9"; do
@@ -168,6 +211,7 @@ if [[ "$NOW" -eq 1 ]]; then
   CHECKSUM_10_10=$(get_md5 "$RELEASES_DIR/$ZIP_10_10")
   CHECKSUM_10_12=$(get_md5 "$RELEASES_DIR/$ZIP_10_12")
   update_manifest_checksums "$MANIFEST_JSON" "$PLUGIN_VERSION" "$CHECKSUM_10_10" "$CHECKSUM_10_12"
+  sort_manifest_versions "$MANIFEST_JSON"
   if [[ -n "$CHECKSUM_10_10" || -n "$CHECKSUM_10_12" ]]; then
     echo "Updated manifest.json checksums for $PLUGIN_VERSION"
   fi
@@ -176,7 +220,7 @@ if [[ "$NOW" -eq 1 ]]; then
   VERSION_ENTRIES=$(jq -r '.[0].versions | length' "$MANIFEST_JSON" 2>/dev/null || echo "0")
   if [[ -n "$VERSION_ENTRIES" && "$VERSION_ENTRIES" != "null" && "$VERSION_ENTRIES" -le 3 ]]; then
     echo "Error: manifest.json has only $VERSION_ENTRIES version entry/entries. Jellyfin catalog and CDN will only offer one version." >&2
-    echo "Add all version entries (oldest first) to manifest.json, then re-run. See existing plugins' manifests for format." >&2
+    echo "Add all version entries to manifest.json, then re-run. Manifest is sorted latest-first." >&2
     exit 1
   fi
 
@@ -201,7 +245,7 @@ if [[ "$NOW" -eq 1 ]]; then
     if [[ "$RELEASE_EXISTS" -eq 1 ]]; then
       echo "Release $RELEASE_TAG already exists; zips are in releases/. Up version in manifest.json and re-run to publish a new release."
     else
-      RELEASE_NOTES=$(jq -r '.[0].versions[-1].changelog' "$MANIFEST_JSON" 2>/dev/null)
+      RELEASE_NOTES=$(jq -r '.[0].versions[0].changelog' "$MANIFEST_JSON" 2>/dev/null)
       [[ -z "$RELEASE_NOTES" || "$RELEASE_NOTES" == "null" ]] && RELEASE_NOTES="Release $RELEASE_TAG"
       echo "Creating GitHub release $RELEASE_TAG..."
       # Use --notes-file so special chars (quotes, etc.) in changelog don't break the shell
@@ -316,29 +360,28 @@ echo "Jellyfin version in container: ${JF_VER_RAW:-unknown} (using build for ${J
 
 # --- Build ---
 echo "Building $PLUGIN_NAME (net8.0 for 10.10, net9.0 for 10.11/10.12)..."
-dotnet clean Jellyfin.Plugin.JellyTrailers.sln -c Release -v q
+dotnet clean Jellyfin.Plugin.JellyTrailers.sln -p:Configuration=Release -v q
 rm -rf "$SCRIPT_DIR/Jellyfin.Plugin.JellyTrailers/obj"
-dotnet restore Jellyfin.Plugin.JellyTrailers.sln -c Release -v q
+dotnet restore Jellyfin.Plugin.JellyTrailers.sln -p:Configuration=Release -v q
 BUILD_FULL_SUCCESS=0
 # Build all targets; if net9.0 not supported by SDK or build error, build net8.0 only
-if dotnet build Jellyfin.Plugin.JellyTrailers.sln -c Release -v q 2>/dev/null; then
+if dotnet build Jellyfin.Plugin.JellyTrailers.sln -p:Configuration=Release -v q 2>/dev/null; then
   BUILD_FULL_SUCCESS=1
 else
   echo "Full build failed. Building net8.0 only..."
-  dotnet build Jellyfin.Plugin.JellyTrailers/Jellyfin.Plugin.JellyTrailers.csproj -c Release -v q -p:TargetFrameworks=net8.0
+  dotnet build Jellyfin.Plugin.JellyTrailers/Jellyfin.Plugin.JellyTrailers.csproj -p:Configuration=Release -v q -f net8.0
 fi
 
-# Pick output dir: 10.10 → net8.0; 10.11/10.12 → net9.0 if present, else net8.0
+# Pick output dir: 10.10 → net8.0; 10.11/10.12 → net9.0 only (required)
 if [[ "$JF_MAJOR_MINOR" == "10.10" ]]; then
   OUTPUT_DIR="$BUILD_DIR/net8.0"
 else
   if [[ -f "$BUILD_DIR/net9.0/$PLUGIN_NAME.dll" ]]; then
     OUTPUT_DIR="$BUILD_DIR/net9.0"
   else
-    OUTPUT_DIR="$BUILD_DIR/net8.0"
-    if [[ "$JF_MAJOR_MINOR" != "10.10" ]]; then
-      echo "Note: net9.0 build not available (install .NET 9 SDK for 10.11/10.12). Using net8.0; plugin may not load on ${JF_MAJOR_MINOR}."
-    fi
+    echo "Error: Jellyfin ${JF_MAJOR_MINOR} requires a net9.0 build, but net9.0 was not built (full build failed)." >&2
+    echo "Install .NET 9 SDK and re-run, or use a Jellyfin 10.10 container (uses net8.0)." >&2
+    exit 1
   fi
 fi
 
@@ -350,8 +393,9 @@ fi
 # --- Zips into releases/ (version from manifest) ---
 RELEASES_DIR="$SCRIPT_DIR/releases"
 MANIFEST_JSON="$SCRIPT_DIR/manifest.json"
-# Manifest has oldest-first; latest = last entry
-PLUGIN_VERSION=$(jq -r '.[0].versions[-1].version' "$MANIFEST_JSON" 2>/dev/null)
+sort_manifest_versions "$MANIFEST_JSON"
+# Manifest sorted latest-first; latest = first entry
+PLUGIN_VERSION=$(jq -r '.[0].versions[0].version' "$MANIFEST_JSON" 2>/dev/null)
 if [[ -n "$PLUGIN_VERSION" && "$PLUGIN_VERSION" != "null" ]]; then
   mkdir -p "$RELEASES_DIR"
   if [[ -f "$BUILD_DIR/net8.0/$PLUGIN_NAME.dll" ]]; then
@@ -371,12 +415,15 @@ if [[ -n "$PLUGIN_VERSION" && "$PLUGIN_VERSION" != "null" ]]; then
     CHECKSUM_10_12=""
   fi
   update_manifest_checksums "$MANIFEST_JSON" "$PLUGIN_VERSION" "$CHECKSUM_10_10" "$CHECKSUM_10_12"
+  sort_manifest_versions "$MANIFEST_JSON"
 else
   echo "Skipping release zips (could not read version from manifest.json; need jq?)."
 fi
 
 # --- Copy into container ---
+# Remove existing plugin dir so we don't mix old files (e.g. Jellyfin.Plugin.Trailers) with the new build.
 echo "Copying plugin into container '$CONTAINER' at $CONTAINER_PLUGINS_PATH/$PLUGIN_NAME/ ..."
+podman exec "$CONTAINER" rm -rf "$CONTAINER_PLUGINS_PATH/$PLUGIN_NAME" 2>/dev/null || true
 podman exec "$CONTAINER" mkdir -p "$CONTAINER_PLUGINS_PATH/$PLUGIN_NAME"
 podman cp "$OUTPUT_DIR/." "$CONTAINER:$CONTAINER_PLUGINS_PATH/$PLUGIN_NAME/"
 
