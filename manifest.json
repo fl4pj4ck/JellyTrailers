@@ -9,6 +9,54 @@
     "imageUrl": "https://raw.githubusercontent.com/fl4pj4ck/JellyTrailers/main/assets/icon.png",
     "versions": [
       {
+        "version": "1.5.4.0",
+        "changelog": "1.5.4: Version bump.",
+        "targetAbi": "10.12.0.0",
+        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.5.4/JellyTrailers_1.5.4.0_10.12.zip",
+        "checksum": "877817ad96ed81b00b79151cf0164eeb",
+        "timestamp": "2025-02-05T00:00:00Z"
+      },
+      {
+        "version": "1.5.4.0",
+        "changelog": "1.5.4: Version bump.",
+        "targetAbi": "10.11.0.0",
+        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.5.4/JellyTrailers_1.5.4.0_10.12.zip",
+        "checksum": "877817ad96ed81b00b79151cf0164eeb",
+        "timestamp": "2025-02-05T00:00:00Z"
+      },
+      {
+        "version": "1.5.4.0",
+        "changelog": "1.5.4: Version bump.",
+        "targetAbi": "10.10.0.0",
+        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.5.4/JellyTrailers_1.5.4.0.zip",
+        "checksum": "1fdf9cffa44450c8dcc0f04f492abee5",
+        "timestamp": "2025-02-05T00:00:00Z"
+      },
+      {
+        "version": "1.5.3.0",
+        "changelog": "1.5.3: First-run notices boxed with inline styles so they render in Jellyfin.",
+        "targetAbi": "10.12.0.0",
+        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.5.3/JellyTrailers_1.5.3.0_10.12.zip",
+        "checksum": "",
+        "timestamp": "2025-02-05T00:00:00Z"
+      },
+      {
+        "version": "1.5.3.0",
+        "changelog": "1.5.3: First-run notices boxed with inline styles so they render in Jellyfin.",
+        "targetAbi": "10.11.0.0",
+        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.5.3/JellyTrailers_1.5.3.0_10.12.zip",
+        "checksum": "",
+        "timestamp": "2025-02-05T00:00:00Z"
+      },
+      {
+        "version": "1.5.3.0",
+        "changelog": "1.5.3: First-run notices boxed with inline styles so they render in Jellyfin.",
+        "targetAbi": "10.10.0.0",
+        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.5.3/JellyTrailers_1.5.3.0.zip",
+        "checksum": "",
+        "timestamp": "2025-02-05T00:00:00Z"
+      },
+      {
         "version": "1.5.2.0",
         "changelog": "1.5.2: Config page notices styled like content; Reset Statistics button yellow/right; remove Last year from stats.",
         "targetAbi": "10.12.0.0",

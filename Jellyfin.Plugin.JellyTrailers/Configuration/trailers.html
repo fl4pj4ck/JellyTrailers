@@ -95,16 +95,17 @@
         }
         .trailers-ytdlp-ok.hidden { display: none !important; }
         .trailers-notice {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-left: 4px solid rgba(255,255,255,0.35);
-            border-radius: 6px;
-            padding: 0.75rem 1rem;
-            margin-bottom: 1rem;
-            font-size: 0.9rem;
-            line-height: 1.45;
-            color: rgba(255,255,255,0.85);
-            box-sizing: border-box;
+            background: rgba(255,255,255,0.05) !important;
+            border: 1px solid rgba(255,255,255,0.2) !important;
+            border-left: 4px solid rgba(255,255,255,0.4) !important;
+            border-radius: 8px !important;
+            padding: 1rem 1.25rem !important;
+            margin-bottom: 1rem !important;
+            font-size: 0.9rem !important;
+            line-height: 1.45 !important;
+            color: rgba(255,255,255,0.9) !important;
+            box-sizing: border-box !important;
+            display: block !important;
         }
         .trailers-notice.hidden { display: none !important; }
     </style>
@@ -120,13 +121,13 @@
                     </div>
                     <p class="trailers-intro" style="color: rgba(255,255,255,0.75); font-size: 0.9rem; line-height: 1.5; margin-bottom: 1.5rem;">Download movie and TV show trailers with yt-dlp and place them next to your media. Run the scheduled task &quot;Download Trailers&quot; from Dashboard → Scheduled Tasks (set the schedule there).</p>
 
-                    <div id="JellyTrailersPathCorrectedNotice" class="trailers-notice hidden" role="status">
+                    <div id="JellyTrailersPathCorrectedNotice" class="trailers-notice hidden" role="status" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); border-left: 4px solid rgba(255,255,255,0.5); border-radius: 8px; padding: 1rem 1.25rem; margin-bottom: 1rem; font-size: 0.9rem; line-height: 1.45; color: rgba(255,255,255,0.9); box-sizing: border-box;">
                         Trailer path was corrected to <strong>trailer.mp4</strong> (only relative paths are allowed; no &quot;..&quot; or absolute paths).
                     </div>
-                    <div id="JellyTrailersYtDlpJsonInvalidNotice" class="trailers-notice hidden" role="status">
+                    <div id="JellyTrailersYtDlpJsonInvalidNotice" class="trailers-notice hidden" role="status" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); border-left: 4px solid rgba(255,255,255,0.5); border-radius: 8px; padding: 1rem 1.25rem; margin-bottom: 1rem; font-size: 0.9rem; line-height: 1.45; color: rgba(255,255,255,0.9); box-sizing: border-box;">
                         Extra yt-dlp options (JSON) was invalid on last load; it was ignored. Fix the JSON below or leave as <code>{}</code>.
                     </div>
-                    <div id="JellyTrailersStatsCorruptedNotice" class="trailers-notice hidden" role="status">
+                    <div id="JellyTrailersStatsCorruptedNotice" class="trailers-notice hidden" role="status" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); border-left: 4px solid rgba(255,255,255,0.5); border-radius: 8px; padding: 1rem 1.25rem; margin-bottom: 1rem; font-size: 0.9rem; line-height: 1.45; color: rgba(255,255,255,0.9); box-sizing: border-box;">
                         Statistics were reset due to a file error.
                     </div>
 
@@ -387,13 +388,26 @@
                         if (r && r.PluginId) pluginId = r.PluginId;
                         var el = document.getElementById('JellyTrailersVersion');
                         if (el && r && r.Version) el.textContent = 'Version ' + r.Version;
-                        var jsonInvalidNotice = document.getElementById('JellyTrailersYtDlpJsonInvalidNotice');
-                        if (jsonInvalidNotice) {
-                            if (r && r.YtDlpOptionsJsonInvalid) jsonInvalidNotice.classList.remove('hidden');
-                            else jsonInvalidNotice.classList.add('hidden');
-                        }
                         if (!pluginId) return Promise.reject(new Error('Plugin ID not available'));
-                        return ApiClient.getPluginConfiguration(pluginId);
+                        return ApiClient.getPluginConfiguration(pluginId).then(function(config) {
+                            var didNormalizePath = false;
+                            var didNormalizeJson = false;
+                            if (isInvalidTrailerPath(config.TrailerPath) || config.TrailerPathCorrected) {
+                                config.TrailerPath = 'trailer.mp4';
+                                config.TrailerPathCorrected = false;
+                                didNormalizePath = true;
+                            }
+                            if (validateYtDlpOptionsJson(config.YtDlpOptionsJson || '')) {
+                                config.YtDlpOptionsJson = '{}';
+                                didNormalizeJson = true;
+                            }
+                            if (didNormalizePath || didNormalizeJson) {
+                                return ApiClient.updatePluginConfiguration(pluginId, config).then(function() {
+                                    return { config: config, versionResponse: r, didNormalizePath: true, didNormalizeJson: true };
+                                });
+                            }
+                            return { config: config, versionResponse: r, didNormalizePath: false, didNormalizeJson: false };
+                        });
                     });
                 }
 
@@ -434,7 +448,11 @@
 
                 page.addEventListener('pageshow', function() {
                     Dashboard.showLoadingMsg();
-                    loadVersionAndConfig().then(function(config) {
+                    loadVersionAndConfig().then(function(result) {
+                        var config = result.config;
+                        var r = result.versionResponse;
+                        var didNormalizePath = result.didNormalizePath;
+                        var didNormalizeJson = result.didNormalizeJson;
                         document.querySelector('#IncludeLibraryNames').value = config.IncludeLibraryNames || '';
                         document.querySelector('#ExcludeLibraryNames').value = config.ExcludeLibraryNames || '';
                         document.querySelector('#YtDlpPath').value = config.YtDlpPath || '';
@@ -445,7 +463,16 @@
                         document.querySelector('#MaxTrailersPerRun').value = config.MaxTrailersPerRun != null ? config.MaxTrailersPerRun : 50;
                         document.querySelector('#UseTmdbOmdbFallback').checked = config.UseTmdbOmdbFallback !== false;
                         document.querySelector('#YtDlpOptionsJson').value = config.YtDlpOptionsJson || '{}';
-                        if (config.TrailerPathCorrected) showTrailerPathCorrectedNotice();
+                        var pathNotice = document.getElementById('JellyTrailersPathCorrectedNotice');
+                        if (pathNotice) {
+                            if (!didNormalizePath && config.TrailerPathCorrected) pathNotice.classList.remove('hidden');
+                            else pathNotice.classList.add('hidden');
+                        }
+                        var jsonInvalidNotice = document.getElementById('JellyTrailersYtDlpJsonInvalidNotice');
+                        if (jsonInvalidNotice) {
+                            if (!didNormalizeJson && r && r.YtDlpOptionsJsonInvalid) jsonInvalidNotice.classList.remove('hidden');
+                            else jsonInvalidNotice.classList.add('hidden');
+                        }
                         showYtDlpJsonInlineError(null);
                         Dashboard.hideLoadingMsg();
                         refreshYtDlpCheck();

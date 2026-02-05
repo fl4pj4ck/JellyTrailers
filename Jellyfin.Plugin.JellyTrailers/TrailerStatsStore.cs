@@ -152,6 +152,13 @@ public class TrailerStatsStore : ITrailerStatsStore
                 ? data.TotalDownloaded
                 : Math.Max(data.TotalDownloaded, data.FoldersWithTrailer);
 
+            var wasCorrupted = data.WasCorrupted;
+            if (wasCorrupted)
+            {
+                data.WasCorrupted = false;
+                SaveData(data);
+            }
+
             return new TrailerStats
             {
                 TotalDownloaded = totalDownloaded,
@@ -165,7 +172,7 @@ public class TrailerStatsStore : ITrailerStatsStore
                 LastRunDownloaded = data.Runs.Count > 0 ? data.Runs[^1].Downloaded : 0,
                 LastRunFailed = data.Runs.Count > 0 ? data.Runs[^1].Failed : 0,
                 TotalRuns = data.Runs.Count,
-                WasCorrupted = data.WasCorrupted
+                WasCorrupted = wasCorrupted
             };
         }
         finally
