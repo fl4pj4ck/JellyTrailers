@@ -1,8 +1,8 @@
 namespace Jellyfin.Plugin.JellyTrailers;
 
 /// <summary>
-/// Single source of truth for plugin identity. Keep in sync with manifest.json guid and
-/// trailers.html pluginId (config page uses this for ApiClient.getPluginConfiguration).
+/// Single source of truth for plugin identity. Keep in sync with manifest.json guid.
+/// Config page gets PluginId from Plugins/JellyTrailers/Version so it never gets out of sync.
 /// </summary>
 public static class PluginConstants
 {

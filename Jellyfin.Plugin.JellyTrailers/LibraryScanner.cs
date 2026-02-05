@@ -9,7 +9,7 @@ namespace Jellyfin.Plugin.JellyTrailers;
 /// Scans Jellyfin library roots and filesystem to build a list of movie/TV folder entries
 /// Movies = direct subdirs of each movie root; TV = S01/S02 or show folders.
 /// </summary>
-public class LibraryScanner
+public class LibraryScanner : ILibraryScanner
 {
     private static readonly System.Text.RegularExpressions.Regex TvSeasonSubdir =
         new(@"^S\d+$", System.Text.RegularExpressions.RegexOptions.IgnoreCase);

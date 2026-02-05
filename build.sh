@@ -360,12 +360,12 @@ echo "Jellyfin version in container: ${JF_VER_RAW:-unknown} (using build for ${J
 
 # --- Build ---
 echo "Building $PLUGIN_NAME (net8.0 for 10.10, net9.0 for 10.11/10.12)..."
-dotnet clean Jellyfin.Plugin.JellyTrailers.sln -p:Configuration=Release -v q
-rm -rf "$SCRIPT_DIR/Jellyfin.Plugin.JellyTrailers/obj"
-dotnet restore Jellyfin.Plugin.JellyTrailers.sln -p:Configuration=Release -v q
+# Remove obj and bin so project.assets.json is regenerated for all TargetFrameworks (avoids NETSDK1005)
+rm -rf "$SCRIPT_DIR/Jellyfin.Plugin.JellyTrailers/obj" "$SCRIPT_DIR/Jellyfin.Plugin.JellyTrailers/bin"
+dotnet restore "$SCRIPT_DIR/Jellyfin.Plugin.JellyTrailers/Jellyfin.Plugin.JellyTrailers.csproj" -p:Configuration=Release -v q
 BUILD_FULL_SUCCESS=0
 # Build all targets; if net9.0 not supported by SDK or build error, build net8.0 only
-if dotnet build Jellyfin.Plugin.JellyTrailers.sln -p:Configuration=Release -v q 2>/dev/null; then
+if dotnet build "$SCRIPT_DIR/Jellyfin.Plugin.JellyTrailers/Jellyfin.Plugin.JellyTrailers.csproj" -p:Configuration=Release -v q 2>/dev/null; then
   BUILD_FULL_SUCCESS=1
 else
   echo "Full build failed. Building net8.0 only..."
@@ -421,9 +421,15 @@ else
 fi
 
 # --- Copy into container ---
-# Remove existing plugin dir so we don't mix old files (e.g. Jellyfin.Plugin.Trailers) with the new build.
+# Remove previous/legacy plugin dirs so we don't mix old files with the new build.
+echo "Removing previous plugin from container (Trailers + JellyTrailers)..."
+for dir in "$OLD_PLUGIN_NAME" "$PLUGIN_NAME"; do
+  if podman exec "$CONTAINER" test -d "$CONTAINER_PLUGINS_PATH/$dir" 2>/dev/null; then
+    podman exec "$CONTAINER" rm -rf "$CONTAINER_PLUGINS_PATH/$dir"
+    echo "  Removed $CONTAINER_PLUGINS_PATH/$dir"
+  fi
+done
 echo "Copying plugin into container '$CONTAINER' at $CONTAINER_PLUGINS_PATH/$PLUGIN_NAME/ ..."
-podman exec "$CONTAINER" rm -rf "$CONTAINER_PLUGINS_PATH/$PLUGIN_NAME" 2>/dev/null || true
 podman exec "$CONTAINER" mkdir -p "$CONTAINER_PLUGINS_PATH/$PLUGIN_NAME"
 podman cp "$OUTPUT_DIR/." "$CONTAINER:$CONTAINER_PLUGINS_PATH/$PLUGIN_NAME/"
 

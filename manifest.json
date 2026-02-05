@@ -13,7 +13,7 @@
         "changelog": "1.3.6: TMDB/OMDb fallback fixed (path resolution, Season→Series trailers).",
         "targetAbi": "10.12.0.0",
         "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.3.6/JellyTrailers_1.3.6.0_10.12.zip",
-        "checksum": "ddc73d354544696f9811fbed0e93fff5",
+        "checksum": "ef95b04ace669c9b36a53ff3d86e6f6f",
         "timestamp": "2025-02-05T00:00:00Z"
       },
       {
@@ -21,7 +21,7 @@
         "changelog": "1.3.6: TMDB/OMDb fallback fixed (path resolution, Season→Series trailers).",
         "targetAbi": "10.11.0.0",
         "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.3.6/JellyTrailers_1.3.6.0_10.12.zip",
-        "checksum": "ddc73d354544696f9811fbed0e93fff5",
+        "checksum": "ef95b04ace669c9b36a53ff3d86e6f6f",
         "timestamp": "2025-02-05T00:00:00Z"
       },
       {
@@ -29,7 +29,7 @@
         "changelog": "1.3.6: TMDB/OMDb fallback fixed (path resolution, Season→Series trailers).",
         "targetAbi": "10.10.0.0",
         "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.3.6/JellyTrailers_1.3.6.0.zip",
-        "checksum": "a0cd73ac26a7b35d37714e64915fba58",
+        "checksum": "aad18ee2b043fb131b934e3df669cb5f",
         "timestamp": "2025-02-05T00:00:00Z"
       },
       {

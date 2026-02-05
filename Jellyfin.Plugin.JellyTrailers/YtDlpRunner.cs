@@ -10,7 +10,7 @@ namespace Jellyfin.Plugin.JellyTrailers;
 /// <summary>
 /// Runs yt-dlp to search and download one trailer. Uses executable from config, or the plugin-managed copy (auto-downloaded if missing).
 /// </summary>
-public class YtDlpRunner
+public class YtDlpRunner : IYtDlpRunner
 {
     /// <summary>
     /// Option names (without leading --) that are safe to pass from YtDlpOptionsJson.

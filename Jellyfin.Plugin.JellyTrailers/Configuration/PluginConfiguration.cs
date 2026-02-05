@@ -62,6 +62,11 @@ public class PluginConfiguration : BasePluginConfiguration
     public bool UseTmdbOmdbFallback { get; set; } = true;
 
     /// <summary>
+    /// Set to true when TrailerPath was corrected (e.g. contained ".." or was absolute). Config page shows a one-time notice and clears this on next save.
+    /// </summary>
+    public bool TrailerPathCorrected { get; set; }
+
+    /// <summary>
     /// Returns the trailer filename to use (non-null, trimmed); defaults to "trailer.mp4" if not set.
     /// Rejects paths containing ".." or absolute paths to prevent writing outside library folders.
     /// </summary>

@@ -1,4 +1,5 @@
 using System;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Jellyfin.Plugin.JellyTrailers;
@@ -28,12 +29,13 @@ public class JellyTrailersController : ControllerBase
 
     /// <summary>
     /// Initializes a new instance of the <see cref="JellyTrailersController"/> class.
+    /// Config and services are resolved from Plugin.Instance when not registered in DI (e.g. Emby); when registered (Jellyfin) inject them for testability.
     /// </summary>
-    /// <param name="applicationPaths">Application paths.</param>
-    /// <param name="logger">Logger instance.</param>
-    /// <param name="loggerFactory">Logger factory.</param>
-    /// <param name="httpClientFactory">HTTP client factory for yt-dlp binary download.</param>
-    public JellyTrailersController(IApplicationPaths applicationPaths, ILogger<JellyTrailersController> logger, ILoggerFactory loggerFactory, IHttpClientFactory httpClientFactory)
+    public JellyTrailersController(
+        IApplicationPaths applicationPaths,
+        ILogger<JellyTrailersController> logger,
+        ILoggerFactory loggerFactory,
+        IHttpClientFactory httpClientFactory)
     {
         _applicationPaths = applicationPaths;
         _logger = logger;
@@ -41,7 +43,7 @@ public class JellyTrailersController : ControllerBase
         _httpClientFactory = httpClientFactory;
     }
 
-    private static PluginConfiguration Config => Plugin.Instance!.Configuration;
+    private PluginConfiguration Config => Plugin.Instance!.Configuration;
 
     /// <summary>
     /// Gets a short message from an exception for API responses.
@@ -64,14 +66,32 @@ public class JellyTrailersController : ControllerBase
     /// <summary>
     /// Get the current plugin version (for display on settings page).
     /// </summary>
-    /// <returns>Plugin version string (e.g. 1.2.0.0).</returns>
+    /// <returns>Plugin version and ID (config page uses PluginId for getPluginConfiguration).</returns>
     [HttpGet("Version")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public ActionResult<PluginVersionResult> GetVersion()
     {
         var version = typeof(Plugin).Assembly.GetName().Version;
         var versionString = version != null ? version.ToString() : "0.0.0";
-        return Ok(new PluginVersionResult { Version = versionString });
+        var ytDlpOptionsJsonInvalid = false;
+        if (!string.IsNullOrWhiteSpace(Config.YtDlpOptionsJson))
+        {
+            try
+            {
+                JsonSerializer.Deserialize<JsonElement>(Config.YtDlpOptionsJson);
+            }
+            catch (JsonException)
+            {
+                ytDlpOptionsJsonInvalid = true;
+            }
+        }
+
+        return Ok(new PluginVersionResult
+        {
+            Version = versionString,
+            PluginId = PluginConstants.PluginId,
+            YtDlpOptionsJsonInvalid = ytDlpOptionsJsonInvalid
+        });
     }
 
     /// <summary>
@@ -95,7 +115,7 @@ public class JellyTrailersController : ControllerBase
     /// <returns>Download result with path and success status.</returns>
     [HttpPost("YtDlpDownload")]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(typeof(ApiErrorResult), StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<YtDlpDownloadResult>> DownloadYtDlp(CancellationToken cancellationToken)
     {
         var targetPath = YtDlpDownloadHelper.GetBundledExePath(_applicationPaths);
@@ -111,6 +131,7 @@ public class JellyTrailersController : ControllerBase
     /// <returns>Aggregated trailer stats.</returns>
     [HttpGet("Stats")]
     [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResult), StatusCodes.Status500InternalServerError)]
     public ActionResult<TrailerStats> GetStats()
     {
         try
@@ -122,7 +143,13 @@ public class JellyTrailersController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to get trailer stats");
-            return StatusCode(StatusCodes.Status500InternalServerError);
+            return StatusCode(
+                StatusCodes.Status500InternalServerError,
+                new ApiErrorResult
+                {
+                    Error = "Failed to load trailer stats",
+                    Detail = GetExceptionMessage(ex)
+                });
         }
     }
 
@@ -132,7 +159,7 @@ public class JellyTrailersController : ControllerBase
     /// <returns>204 No Content on success.</returns>
     [HttpPost("Stats/Reset")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(typeof(ApiErrorResult), StatusCodes.Status500InternalServerError)]
     public ActionResult ResetStats()
     {
         try
@@ -144,7 +171,13 @@ public class JellyTrailersController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to reset trailer stats");
-            return StatusCode(StatusCodes.Status500InternalServerError);
+            return StatusCode(
+                StatusCodes.Status500InternalServerError,
+                new ApiErrorResult
+                {
+                    Error = "Failed to reset trailer stats",
+                    Detail = GetExceptionMessage(ex)
+                });
         }
     }
 }
@@ -164,8 +197,24 @@ public class YtDlpDownloadResult
     public string Message { get; set; } = string.Empty;
 }
 
-/// <summary>Plugin version for the settings page.</summary>
+/// <summary>Plugin version and ID for the settings page.</summary>
 public class PluginVersionResult
 {
     public string Version { get; set; } = string.Empty;
+
+    /// <summary>Plugin GUID so the config page never gets out of sync with PluginConstants.PluginId.</summary>
+    public string PluginId { get; set; } = string.Empty;
+
+    /// <summary>True when YtDlpOptionsJson was invalid on last check (config page shows warning).</summary>
+    public bool YtDlpOptionsJsonInvalid { get; set; }
+}
+
+/// <summary>JSON error payload returned when an API endpoint fails (e.g. 500).</summary>
+public class ApiErrorResult
+{
+    /// <summary>Short error description for the client.</summary>
+    public string Error { get; set; } = string.Empty;
+
+    /// <summary>Optional detail (e.g. exception message) for debugging.</summary>
+    public string? Detail { get; set; }
 }

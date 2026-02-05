@@ -12,7 +12,7 @@ namespace Jellyfin.Plugin.JellyTrailers;
 /// All file I/O uses a single static semaphore so reads/writes are serialized. If async file I/O
 /// is added later, use the same semaphore with <see cref="SemaphoreSlim.WaitAsync()"/> to keep locking consistent.
 /// </summary>
-public class TrailerStatsStore
+public class TrailerStatsStore : ITrailerStatsStore
 {
     private readonly string _dataDir;
     private readonly ILogger _logger;
@@ -49,6 +49,7 @@ public class TrailerStatsStore
             var data = LoadData();
             data.TotalFolders = totalFolders;
             data.FoldersWithTrailer = foldersWithTrailer;
+            data.WasCorrupted = false;
             SaveData(data);
         }
         finally
@@ -100,6 +101,7 @@ public class TrailerStatsStore
             data.Runs = data.Runs
                 .Where(r => DateTime.TryParse(r.Date, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out var d) && d >= cutoff)
                 .ToList();
+            data.WasCorrupted = false;
             SaveData(data);
         }
         finally
@@ -162,7 +164,8 @@ public class TrailerStatsStore
                 LastRunDate = data.Runs.Count > 0 ? data.Runs[^1].Date : null,
                 LastRunDownloaded = data.Runs.Count > 0 ? data.Runs[^1].Downloaded : 0,
                 LastRunFailed = data.Runs.Count > 0 ? data.Runs[^1].Failed : 0,
-                TotalRuns = data.Runs.Count
+                TotalRuns = data.Runs.Count,
+                WasCorrupted = data.WasCorrupted
             };
         }
         finally
@@ -185,8 +188,10 @@ public class TrailerStatsStore
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Failed to load stats from {Path}", path);
-            return new StatsData();
+            _logger.LogWarning(ex, "Failed to load stats from {Path}; resetting stats file.", path);
+            var resetData = new StatsData { WasCorrupted = true };
+            SaveData(resetData);
+            return resetData;
         }
     }
 
@@ -220,6 +225,9 @@ public class TrailerStatsStore
 
         [JsonPropertyName("runs")]
         public List<RunRecord> Runs { get; set; } = new();
+
+        [JsonPropertyName("wasCorrupted")]
+        public bool WasCorrupted { get; set; }
     }
 
     private class RunRecord
@@ -272,4 +280,10 @@ public class TrailerStats
 
     [JsonPropertyName("foldersWithTrailer")]
     public int FoldersWithTrailer { get; set; }
+
+    /// <summary>
+    /// True when stats were reset due to a file error (corrupted stats.json). UI can show a one-time notice.
+    /// </summary>
+    [JsonPropertyName("wasCorrupted")]
+    public bool WasCorrupted { get; set; }
 }

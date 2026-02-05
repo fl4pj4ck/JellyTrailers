@@ -107,6 +107,16 @@
                     </div>
                     <p class="trailers-intro" style="color: rgba(255,255,255,0.75); font-size: 0.9rem; line-height: 1.5; margin-bottom: 1.5rem;">Download movie and TV show trailers with yt-dlp and place them next to your media. Run the scheduled task &quot;Download Trailers&quot; from Dashboard → Scheduled Tasks (set the schedule there).</p>
 
+                    <div id="JellyTrailersPathCorrectedNotice" class="trailers-ytdlp-ok hidden" style="background: rgba(251,191,36,0.15); border-left-color: #f59e0b; margin-bottom: 1rem;" role="status">
+                        Trailer path was corrected to <strong>trailer.mp4</strong> (only relative paths are allowed; no &quot;..&quot; or absolute paths).
+                    </div>
+                    <div id="JellyTrailersYtDlpJsonInvalidNotice" class="trailers-ytdlp-ok hidden" style="background: rgba(251,191,36,0.15); border-left-color: #f59e0b; margin-bottom: 1rem;" role="status">
+                        Extra yt-dlp options (JSON) was invalid on last load; it was ignored. Fix the JSON below or leave as <code>{}</code>.
+                    </div>
+                    <div id="JellyTrailersStatsCorruptedNotice" class="trailers-ytdlp-ok hidden" style="background: rgba(251,191,36,0.15); border-left-color: #f59e0b; margin-bottom: 1rem;" role="status">
+                        Statistics were reset due to a file error.
+                    </div>
+
                     <div id="JellyTrailersYtDlpAlert" class="trailers-ytdlp-alert hidden" role="alert" style="display: none; background: #7f1d1d; border: 2px solid #dc2626; border-radius: 6px; padding: 1rem 1.25rem; margin-bottom: 1.25rem; color: #fecaca; font-size: 0.9rem; line-height: 1.45; flex-direction: row; align-items: flex-start; gap: 0.75rem; box-sizing: border-box;">
                         <span aria-hidden="true" style="color: #fca5a5; font-size: 1.25rem; flex-shrink: 0; line-height: 1;">⚠</span>
                         <div style="flex: 1; min-width: 0; word-wrap: break-word;">
@@ -191,6 +201,7 @@
                     <div class="inputContainer">
                         <label class="inputLabel inputLabelUnfocused" for="YtDlpOptionsJson">Extra yt-dlp options (JSON)</label>
                         <input id="YtDlpOptionsJson" name="YtDlpOptionsJson" type="text" is="emby-input" />
+                        <div id="JellyTrailersYtDlpJsonError" class="fieldDescription" style="color: #f87171; margin-top: 0.25rem; display: none;"></div>
                         <div class="fieldDescription">Optional JSON object. Only allowlisted options are applied (e.g. user-agent, proxy, format); exec and similar are ignored.</div>
                     </div>
                     <div>
@@ -213,8 +224,8 @@
         </div>
         <script type="text/javascript">
             (function() {
-                // Must match PluginConstants.PluginId (single source: PluginConstants.cs)
-                var pluginId = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890';
+                // Set from server (Plugins/JellyTrailers/Version) so config page never gets out of sync with PluginConstants.PluginId
+                var pluginId = '';
                 var page = document.querySelector('#JellyTrailersConfigPage');
                 var form = document.querySelector('#JellyTrailersConfigForm');
                 var lastYtDlpVersion = '';
@@ -307,6 +318,9 @@
                         var task = tasks.find(function(t) { return t.Key === 'JellyTrailersDownload'; });
                         var scheduleInfo = getScheduleInfo(task);
                         renderStats(stats, scheduleInfo);
+                        var corruptedNotice = document.getElementById('JellyTrailersStatsCorruptedNotice');
+                        if (corruptedNotice && stats && stats.wasCorrupted) corruptedNotice.classList.remove('hidden');
+                        else if (corruptedNotice) corruptedNotice.classList.add('hidden');
                     }).catch(function() {
                         document.querySelector('#JellyTrailersStatsContent').textContent = 'Stats unavailable.';
                     });
@@ -357,17 +371,59 @@
 
                 var statsPollInterval;
 
-                function loadVersion() {
-                    ApiClient.getJSON(ApiClient.getUrl('Plugins/JellyTrailers/Version') + '?t=' + Date.now()).then(function(r) {
+                function loadVersionAndConfig() {
+                    return ApiClient.getJSON(ApiClient.getUrl('Plugins/JellyTrailers/Version') + '?t=' + Date.now()).then(function(r) {
+                        if (r && r.PluginId) pluginId = r.PluginId;
                         var el = document.getElementById('JellyTrailersVersion');
                         if (el && r && r.Version) el.textContent = 'Version ' + r.Version;
-                    }).catch(function() {});
+                        var jsonInvalidNotice = document.getElementById('JellyTrailersYtDlpJsonInvalidNotice');
+                        if (jsonInvalidNotice) {
+                            if (r && r.YtDlpOptionsJsonInvalid) jsonInvalidNotice.classList.remove('hidden');
+                            else jsonInvalidNotice.classList.add('hidden');
+                        }
+                        if (!pluginId) return Promise.reject(new Error('Plugin ID not available'));
+                        return ApiClient.getPluginConfiguration(pluginId);
+                    });
+                }
+
+                function validateYtDlpOptionsJson(value) {
+                    if (!value || typeof value !== 'string') return null;
+                    var s = value.trim();
+                    if (s === '') return null;
+                    try {
+                        JSON.parse(s);
+                        return null;
+                    } catch (e) {
+                        return e.message || 'Invalid JSON';
+                    }
+                }
+
+                function showYtDlpJsonInlineError(msg) {
+                    var el = document.getElementById('JellyTrailersYtDlpJsonError');
+                    if (!el) return;
+                    if (msg) {
+                        el.textContent = msg;
+                        el.style.display = 'block';
+                    } else {
+                        el.textContent = '';
+                        el.style.display = 'none';
+                    }
+                }
+
+                function isInvalidTrailerPath(path) {
+                    if (!path || typeof path !== 'string') return false;
+                    var p = path.trim();
+                    return p.indexOf('..') !== -1 || /^[a-zA-Z]:[\\/]/.test(p) || p.indexOf('/') === 0;
+                }
+
+                function showTrailerPathCorrectedNotice() {
+                    var notice = document.getElementById('JellyTrailersPathCorrectedNotice');
+                    if (notice) notice.classList.remove('hidden');
                 }
 
                 page.addEventListener('pageshow', function() {
                     Dashboard.showLoadingMsg();
-                    loadVersion();
-                    ApiClient.getPluginConfiguration(pluginId).then(function(config) {
+                    loadVersionAndConfig().then(function(config) {
                         document.querySelector('#IncludeLibraryNames').value = config.IncludeLibraryNames || '';
                         document.querySelector('#ExcludeLibraryNames').value = config.ExcludeLibraryNames || '';
                         document.querySelector('#YtDlpPath').value = config.YtDlpPath || '';
@@ -378,8 +434,13 @@
                         document.querySelector('#MaxTrailersPerRun').value = config.MaxTrailersPerRun != null ? config.MaxTrailersPerRun : 50;
                         document.querySelector('#UseTmdbOmdbFallback').checked = config.UseTmdbOmdbFallback !== false;
                         document.querySelector('#YtDlpOptionsJson').value = config.YtDlpOptionsJson || '{}';
+                        if (config.TrailerPathCorrected) showTrailerPathCorrectedNotice();
+                        showYtDlpJsonInlineError(null);
                         Dashboard.hideLoadingMsg();
                         refreshYtDlpCheck();
+                    }).catch(function() {
+                        Dashboard.hideLoadingMsg();
+                        document.querySelector('#JellyTrailersStatsContent').textContent = 'Could not load plugin ID or configuration.';
                     });
                     refreshStats();
                     if (statsPollInterval) clearInterval(statsPollInterval);
@@ -395,12 +456,20 @@
 
                 form.addEventListener('submit', function(e) {
                     e.preventDefault();
+                    if (!pluginId) return false;
                     Dashboard.showLoadingMsg();
                     ApiClient.getPluginConfiguration(pluginId).then(function(config) {
                         config.IncludeLibraryNames = (document.querySelector('#IncludeLibraryNames').value || '').trim();
                         config.ExcludeLibraryNames = (document.querySelector('#ExcludeLibraryNames').value || '').trim();
                         config.YtDlpPath = (document.querySelector('#YtDlpPath').value || '').replace(/^["']|["']$/g, '').trim();
-                        config.TrailerPath = document.querySelector('#TrailerPath').value || 'trailer.mp4';
+                        var trailerPathInput = (document.querySelector('#TrailerPath').value || 'trailer.mp4').trim();
+                        if (isInvalidTrailerPath(trailerPathInput)) {
+                            config.TrailerPath = 'trailer.mp4';
+                            config.TrailerPathCorrected = true;
+                        } else {
+                            config.TrailerPath = trailerPathInput || 'trailer.mp4';
+                            config.TrailerPathCorrected = false;
+                        }
                         config.Quality = document.querySelector('#Quality').value || '720p';
                         config.DelaySeconds = parseInt(document.querySelector('#DelaySeconds').value, 10) || 3;
                         config.RetryDelaySeconds = parseInt(document.querySelector('#RetryDelaySeconds').value, 10) || 5;
@@ -409,6 +478,10 @@
                         config.YtDlpOptionsJson = document.querySelector('#YtDlpOptionsJson').value || '{}';
                         ApiClient.updatePluginConfiguration(pluginId, config).then(function(result) {
                             Dashboard.processPluginConfigurationUpdateResult(result);
+                            if (config.TrailerPathCorrected) {
+                                document.querySelector('#TrailerPath').value = 'trailer.mp4';
+                                showTrailerPathCorrectedNotice();
+                            }
                             refreshYtDlpCheck();
                         });
                     });
@@ -480,6 +553,14 @@
                         btn.disabled = false;
                     });
                 });
+
+                var ytDlpJsonInput = document.getElementById('YtDlpOptionsJson');
+                if (ytDlpJsonInput) {
+                    ytDlpJsonInput.addEventListener('blur', function() {
+                        var err = validateYtDlpOptionsJson(this.value);
+                        showYtDlpJsonInlineError(err);
+                    });
+                }
 
                 document.querySelector('#BtnRemoveAllTrailers').addEventListener('click', function() {
                     if (!confirm('This will delete all trailer files in your movie and TV libraries (using the trailer filename setting above). Continue?')) {
