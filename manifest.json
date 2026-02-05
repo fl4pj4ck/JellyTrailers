@@ -9,6 +9,30 @@
     "imageUrl": "https://raw.githubusercontent.com/fl4pj4ck/JellyTrailers/main/assets/icon.png",
     "versions": [
       {
+        "version": "1.5.0.0",
+        "changelog": "1.5.0: IPluginServiceRegistrator + interfaces (IYtDlpRunner, ITrailerStatsStore, ILibraryScanner); config page YtDlpOptionsJson invalid warning and blur validation; stats corruption handling (WasCorrupted + reset).",
+        "targetAbi": "10.12.0.0",
+        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.5.0/JellyTrailers_1.5.0.0_10.12.zip",
+        "checksum": "7a6920d32cc3ff4396256ef2f277b744",
+        "timestamp": "2025-02-05T00:00:00Z"
+      },
+      {
+        "version": "1.5.0.0",
+        "changelog": "1.5.0: IPluginServiceRegistrator + interfaces (IYtDlpRunner, ITrailerStatsStore, ILibraryScanner); config page YtDlpOptionsJson invalid warning and blur validation; stats corruption handling (WasCorrupted + reset).",
+        "targetAbi": "10.11.0.0",
+        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.5.0/JellyTrailers_1.5.0.0_10.12.zip",
+        "checksum": "7a6920d32cc3ff4396256ef2f277b744",
+        "timestamp": "2025-02-05T00:00:00Z"
+      },
+      {
+        "version": "1.5.0.0",
+        "changelog": "1.5.0: IPluginServiceRegistrator + interfaces (IYtDlpRunner, ITrailerStatsStore, ILibraryScanner); config page YtDlpOptionsJson invalid warning and blur validation; stats corruption handling (WasCorrupted + reset).",
+        "targetAbi": "10.10.0.0",
+        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.5.0/JellyTrailers_1.5.0.0.zip",
+        "checksum": "f6e5b1676fde0cdaed70895fa026820b",
+        "timestamp": "2025-02-05T00:00:00Z"
+      },
+      {
         "version": "1.3.6.0",
         "changelog": "1.3.6: TMDB/OMDb fallback fixed (path resolution, Season→Series trailers).",
         "targetAbi": "10.12.0.0",
