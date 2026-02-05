@@ -1,13 +1,18 @@
 using System.Collections.Generic;
+using System.Text.Json;
 using MediaBrowser.Model.Plugins;
 
 namespace Jellyfin.Plugin.JellyTrailers.Configuration;
 
 /// <summary>
 /// Plugin configuration for trailer downloads.
+/// Invalid stored values are never exposed: path and JSON getters return safe defaults so first run never needs "fixing".
 /// </summary>
 public class PluginConfiguration : BasePluginConfiguration
 {
+    private string _trailerPath = "trailer.mp4";
+    private string _ytDlpOptionsJson = "{}";
+
     /// <summary>
     /// Comma-separated library names to include (empty = all movie/TV libraries).
     /// </summary>
@@ -26,8 +31,13 @@ public class PluginConfiguration : BasePluginConfiguration
 
     /// <summary>
     /// Trailer file path relative to each media folder (e.g. "trailer.mp4" or "Trailer/trailer.mp4").
+    /// Getter never returns invalid paths (empty, "..", or absolute); returns "trailer.mp4" instead so first run never shows a correction notice.
     /// </summary>
-    public string TrailerPath { get; set; } = "trailer.mp4";
+    public string TrailerPath
+    {
+        get => GetEffectiveTrailerPathInternal(_trailerPath);
+        set => _trailerPath = value ?? string.Empty;
+    }
 
     /// <summary>
     /// Maximum quality: "best", "1080p", "720p", "480p".
@@ -52,8 +62,13 @@ public class PluginConfiguration : BasePluginConfiguration
     /// <summary>
     /// Optional extra yt-dlp options as JSON. Only allowlisted option names are applied (e.g. user-agent, proxy, format);
     /// execution-related options (exec, postprocessor-args, etc.) are ignored for security.
+    /// Getter never returns invalid JSON; returns "{}" if stored value does not parse, so first run never shows an invalid-JSON notice.
     /// </summary>
-    public string YtDlpOptionsJson { get; set; } = "{}";
+    public string YtDlpOptionsJson
+    {
+        get => TryParseJson(_ytDlpOptionsJson) ? _ytDlpOptionsJson : "{}";
+        set => _ytDlpOptionsJson = TryParseJson(value) ? (value ?? "{}").Trim() : "{}";
+    }
 
     /// <summary>
     /// When true, if download from YouTube (yt-dlp search) fails, try to download using the first trailer URL
@@ -63,22 +78,39 @@ public class PluginConfiguration : BasePluginConfiguration
 
     /// <summary>
     /// Set to true when TrailerPath was corrected (e.g. contained ".." or was absolute). Config page shows a one-time notice and clears this on next save.
+    /// Only meaningful when the user actually saved an invalid path; we never expose a "corrected" state for bad data from disk.
     /// </summary>
     public bool TrailerPathCorrected { get; set; }
+
+    private static string GetEffectiveTrailerPathInternal(string path)
+    {
+        var p = string.IsNullOrWhiteSpace(path) ? "trailer.mp4" : path.Trim();
+        if (string.IsNullOrEmpty(p)) return "trailer.mp4";
+        if (p.Contains("..", StringComparison.Ordinal) || Path.IsPathRooted(p))
+            return "trailer.mp4";
+        return p;
+    }
+
+    private static bool TryParseJson(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return false;
+        try
+        {
+            JsonSerializer.Deserialize<JsonElement>(value.Trim());
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
 
     /// <summary>
     /// Returns the trailer filename to use (non-null, trimmed); defaults to "trailer.mp4" if not set.
     /// Rejects paths containing ".." or absolute paths to prevent writing outside library folders.
     /// </summary>
     /// <returns>Safe relative trailer path, e.g. "trailer.mp4".</returns>
-    public string GetEffectiveTrailerPath()
-    {
-        var path = string.IsNullOrWhiteSpace(TrailerPath) ? "trailer.mp4" : TrailerPath.Trim();
-        if (string.IsNullOrEmpty(path)) return "trailer.mp4";
-        if (path.Contains("..", StringComparison.Ordinal) || Path.IsPathRooted(path))
-            return "trailer.mp4";
-        return path;
-    }
+    public string GetEffectiveTrailerPath() => GetEffectiveTrailerPathInternal(_trailerPath);
 
     /// <summary>
     /// Parses <see cref="IncludeLibraryNames"/> into a set of trimmed, non-empty names (case-insensitive).

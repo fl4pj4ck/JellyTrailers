@@ -392,13 +392,16 @@
                         return ApiClient.getPluginConfiguration(pluginId).then(function(config) {
                             var didNormalizePath = false;
                             var didNormalizeJson = false;
-                            if (isInvalidTrailerPath(config.TrailerPath) || config.TrailerPathCorrected) {
-                                config.TrailerPath = 'trailer.mp4';
-                                config.TrailerPathCorrected = false;
+                            var pathCorrected = config.TrailerPathCorrected === true || config.trailerPathCorrected === true;
+                            var path = config.TrailerPath || config.trailerPath;
+                            var jsonStr = config.YtDlpOptionsJson || config.ytDlpOptionsJson;
+                            if (isInvalidTrailerPath(path) || pathCorrected) {
+                                config.TrailerPath = config.trailerPath = 'trailer.mp4';
+                                config.TrailerPathCorrected = config.trailerPathCorrected = false;
                                 didNormalizePath = true;
                             }
-                            if (validateYtDlpOptionsJson(config.YtDlpOptionsJson || '')) {
-                                config.YtDlpOptionsJson = '{}';
+                            if (validateYtDlpOptionsJson(jsonStr || '')) {
+                                config.YtDlpOptionsJson = config.ytDlpOptionsJson = '{}';
                                 didNormalizeJson = true;
                             }
                             if (didNormalizePath || didNormalizeJson) {
@@ -453,24 +456,27 @@
                         var r = result.versionResponse;
                         var didNormalizePath = result.didNormalizePath;
                         var didNormalizeJson = result.didNormalizeJson;
-                        document.querySelector('#IncludeLibraryNames').value = config.IncludeLibraryNames || '';
-                        document.querySelector('#ExcludeLibraryNames').value = config.ExcludeLibraryNames || '';
-                        document.querySelector('#YtDlpPath').value = config.YtDlpPath || '';
-                        document.querySelector('#TrailerPath').value = config.TrailerPath || 'trailer.mp4';
-                        document.querySelector('#Quality').value = config.Quality || '720p';
-                        document.querySelector('#DelaySeconds').value = config.DelaySeconds != null ? config.DelaySeconds : 3;
-                        document.querySelector('#RetryDelaySeconds').value = config.RetryDelaySeconds != null ? config.RetryDelaySeconds : 5;
-                        document.querySelector('#MaxTrailersPerRun').value = config.MaxTrailersPerRun != null ? config.MaxTrailersPerRun : 50;
-                        document.querySelector('#UseTmdbOmdbFallback').checked = config.UseTmdbOmdbFallback !== false;
-                        document.querySelector('#YtDlpOptionsJson').value = config.YtDlpOptionsJson || '{}';
+                        var get = function(obj, p) { var q = obj[p]; if (q !== undefined) return q; var c = p.charAt(0).toLowerCase() + p.slice(1); return obj[c]; };
+                        document.querySelector('#IncludeLibraryNames').value = get(config, 'IncludeLibraryNames') || '';
+                        document.querySelector('#ExcludeLibraryNames').value = get(config, 'ExcludeLibraryNames') || '';
+                        document.querySelector('#YtDlpPath').value = get(config, 'YtDlpPath') || '';
+                        document.querySelector('#TrailerPath').value = get(config, 'TrailerPath') || 'trailer.mp4';
+                        document.querySelector('#Quality').value = get(config, 'Quality') || '720p';
+                        document.querySelector('#DelaySeconds').value = get(config, 'DelaySeconds') != null ? get(config, 'DelaySeconds') : 3;
+                        document.querySelector('#RetryDelaySeconds').value = get(config, 'RetryDelaySeconds') != null ? get(config, 'RetryDelaySeconds') : 5;
+                        document.querySelector('#MaxTrailersPerRun').value = get(config, 'MaxTrailersPerRun') != null ? get(config, 'MaxTrailersPerRun') : 50;
+                        document.querySelector('#UseTmdbOmdbFallback').checked = get(config, 'UseTmdbOmdbFallback') !== false;
+                        document.querySelector('#YtDlpOptionsJson').value = get(config, 'YtDlpOptionsJson') || '{}';
+                        var pathCorrected = get(config, 'TrailerPathCorrected') === true;
                         var pathNotice = document.getElementById('JellyTrailersPathCorrectedNotice');
                         if (pathNotice) {
-                            if (!didNormalizePath && config.TrailerPathCorrected) pathNotice.classList.remove('hidden');
+                            if (!didNormalizePath && pathCorrected) pathNotice.classList.remove('hidden');
                             else pathNotice.classList.add('hidden');
                         }
                         var jsonInvalidNotice = document.getElementById('JellyTrailersYtDlpJsonInvalidNotice');
                         if (jsonInvalidNotice) {
-                            if (!didNormalizeJson && r && r.YtDlpOptionsJsonInvalid) jsonInvalidNotice.classList.remove('hidden');
+                            var jsonInvalid = r && (r.YtDlpOptionsJsonInvalid === true || r.ytDlpOptionsJsonInvalid === true);
+                        if (!didNormalizeJson && jsonInvalid) jsonInvalidNotice.classList.remove('hidden');
                             else jsonInvalidNotice.classList.add('hidden');
                         }
                         showYtDlpJsonInlineError(null);
