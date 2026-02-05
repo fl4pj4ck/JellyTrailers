@@ -9,6 +9,30 @@
     "imageUrl": "https://raw.githubusercontent.com/fl4pj4ck/JellyTrailers/main/assets/icon.png",
     "versions": [
       {
+        "version": "1.3.6.0",
+        "changelog": "1.3.6: TMDB/OMDb fallback fixed (path resolution, Season→Series trailers).",
+        "targetAbi": "10.12.0.0",
+        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.3.6/JellyTrailers_1.3.6.0_10.12.zip",
+        "checksum": "ddc73d354544696f9811fbed0e93fff5",
+        "timestamp": "2025-02-05T00:00:00Z"
+      },
+      {
+        "version": "1.3.6.0",
+        "changelog": "1.3.6: TMDB/OMDb fallback fixed (path resolution, Season→Series trailers).",
+        "targetAbi": "10.11.0.0",
+        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.3.6/JellyTrailers_1.3.6.0_10.12.zip",
+        "checksum": "ddc73d354544696f9811fbed0e93fff5",
+        "timestamp": "2025-02-05T00:00:00Z"
+      },
+      {
+        "version": "1.3.6.0",
+        "changelog": "1.3.6: TMDB/OMDb fallback fixed (path resolution, Season→Series trailers).",
+        "targetAbi": "10.10.0.0",
+        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.3.6/JellyTrailers_1.3.6.0.zip",
+        "checksum": "a0cd73ac26a7b35d37714e64915fba58",
+        "timestamp": "2025-02-05T00:00:00Z"
+      },
+      {
         "version": "1.3.5.1",
         "changelog": "1.3.5.1: Schedule setup removed from plugin settings (use Dashboard → Scheduled Tasks). Stats show schedule (how often, when) and last run.",
         "targetAbi": "10.12.0.0",

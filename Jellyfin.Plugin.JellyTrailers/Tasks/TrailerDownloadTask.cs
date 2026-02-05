@@ -5,7 +5,9 @@ using Jellyfin.Plugin.JellyTrailers;
 using Jellyfin.Plugin.JellyTrailers.Configuration;
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Controller.Entities;
+using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Controller.Library;
+using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Plugins;
 using MediaBrowser.Model.Tasks;
 using Microsoft.Extensions.Http;
@@ -123,6 +125,20 @@ public class TrailerDownloadTask : IScheduledTask
                 _logger.LogInformation("Trailer [{Index}/{Total}] {Query} -> {Output}", i + 1, needs.Count, query, outputPath);
 
                 var ok = await ytDlp.DownloadOneAsync(entry, outputPath, cancellationToken).ConfigureAwait(false);
+
+                // When YouTube download fails, try TMDB/OMDb fallback first (before retrying YouTube)
+                if (!ok && Config.UseTmdbOmdbFallback)
+                {
+                    var fallbackUrl = GetFirstRemoteTrailerUrl(entry.Path);
+                    if (!string.IsNullOrWhiteSpace(fallbackUrl))
+                    {
+                        _logger.LogInformation("Trying TMDB/OMDb fallback for: {Query}", query);
+                        ok = await ytDlp.DownloadFromUrlAsync(fallbackUrl, outputPath, cancellationToken).ConfigureAwait(false);
+                        if (ok)
+                            _logger.LogInformation("Trailer downloaded via TMDB/OMDb fallback: {Path}", entry.Path);
+                    }
+                }
+
                 if (!ok)
                 {
                     await Task.Delay(retryDelayMs, cancellationToken).ConfigureAwait(false);
@@ -130,7 +146,7 @@ public class TrailerDownloadTask : IScheduledTask
                     ok = await ytDlp.DownloadOneAsync(entry, outputPath, cancellationToken).ConfigureAwait(false);
                 }
 
-                // TMDB/OMDb fallback: when YouTube download fails, try first trailer URL from Jellyfin metadata
+                // If YouTube retry still failed, try fallback once more
                 if (!ok && Config.UseTmdbOmdbFallback)
                 {
                     var fallbackUrl = GetFirstRemoteTrailerUrl(entry.Path);
@@ -170,13 +186,24 @@ public class TrailerDownloadTask : IScheduledTask
 
     /// <summary>
     /// Resolves the library item by path and returns the first remote trailer URL from metadata (TMDB/OMDb), or null.
+    /// For movies, uses the item's RemoteTrailers. For TV season folders, uses the parent Series' RemoteTrailers.
     /// </summary>
     private string? GetFirstRemoteTrailerUrl(string folderPath)
     {
+        if (string.IsNullOrWhiteSpace(folderPath))
+            return null;
         try
         {
-            var item = _libraryManager.FindByPath(folderPath, true);
-            var trailers = item?.RemoteTrailers;
+            var path = Path.GetFullPath(folderPath).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            var item = _libraryManager.FindByPath(path, true);
+            if (item == null)
+            {
+                var parentPath = Path.GetDirectoryName(path);
+                if (!string.IsNullOrEmpty(parentPath))
+                    item = _libraryManager.FindByPath(parentPath, true);
+            }
+
+            var trailers = GetTrailersFromItem(item);
             if (trailers == null || trailers.Count == 0)
                 return null;
             var first = trailers[0];
@@ -188,6 +215,21 @@ public class TrailerDownloadTask : IScheduledTask
             _logger.LogDebug(ex, "Could not get remote trailer URL for path: {Path}", folderPath);
             return null;
         }
+    }
+
+    /// <summary>
+    /// Gets RemoteTrailers from the item. For Season, returns the parent Series' trailers (metadata is on Series).
+    /// </summary>
+    private static IReadOnlyList<MediaUrl>? GetTrailersFromItem(BaseItem? item)
+    {
+        if (item == null)
+            return null;
+        if (item is Season season)
+        {
+            var series = season.Series ?? season.FindParent<Series>();
+            return series?.RemoteTrailers;
+        }
+        return item.RemoteTrailers;
     }
 
     private static bool EntryHasTrailer(string mediaPath, string trailerPath)
