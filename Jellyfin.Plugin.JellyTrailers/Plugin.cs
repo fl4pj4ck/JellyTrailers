@@ -33,11 +33,12 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages, IPluginServ
     /// <inheritdoc />
     public void RegisterServices(IServiceCollection serviceCollection, IServerApplicationHost applicationHost)
     {
-        if (Instance != null)
-        {
-            serviceCollection.AddSingleton(Instance);
-            serviceCollection.AddSingleton(Instance.Configuration);
-        }
+        // Register via factory so resolution happens when the service is first requested (by then
+        // the host has constructed Plugin and Instance is set). This avoids "Unable to resolve
+        // service for type PluginConfiguration" when the host calls RegisterServices before
+        // instantiating the plugin.
+        serviceCollection.AddSingleton<Plugin>(_ => Instance ?? throw new InvalidOperationException("JellyTrailers.Plugin not initialized."));
+        serviceCollection.AddSingleton<PluginConfiguration>(_ => Instance?.Configuration ?? throw new InvalidOperationException("JellyTrailers.Plugin not initialized."));
     }
 
     /// <inheritdoc />
