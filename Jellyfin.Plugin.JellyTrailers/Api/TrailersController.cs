@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Jellyfin.Plugin.JellyTrailers;
 using Jellyfin.Plugin.JellyTrailers.Configuration;
 using MediaBrowser.Common.Configuration;
 using Microsoft.AspNetCore.Authorization;
@@ -20,7 +21,6 @@ namespace Jellyfin.Plugin.JellyTrailers.Api;
 [Authorize]
 public class JellyTrailersController : ControllerBase
 {
-    private readonly PluginConfiguration _config;
     private readonly IApplicationPaths _applicationPaths;
     private readonly ILogger<JellyTrailersController> _logger;
     private readonly ILoggerFactory _loggerFactory;
@@ -29,19 +29,19 @@ public class JellyTrailersController : ControllerBase
     /// <summary>
     /// Initializes a new instance of the <see cref="JellyTrailersController"/> class.
     /// </summary>
-    /// <param name="config">Plugin configuration.</param>
     /// <param name="applicationPaths">Application paths.</param>
     /// <param name="logger">Logger instance.</param>
     /// <param name="loggerFactory">Logger factory.</param>
     /// <param name="httpClientFactory">HTTP client factory for yt-dlp binary download.</param>
-    public JellyTrailersController(PluginConfiguration config, IApplicationPaths applicationPaths, ILogger<JellyTrailersController> logger, ILoggerFactory loggerFactory, IHttpClientFactory httpClientFactory)
+    public JellyTrailersController(IApplicationPaths applicationPaths, ILogger<JellyTrailersController> logger, ILoggerFactory loggerFactory, IHttpClientFactory httpClientFactory)
     {
-        _config = config;
         _applicationPaths = applicationPaths;
         _logger = logger;
         _loggerFactory = loggerFactory;
         _httpClientFactory = httpClientFactory;
     }
+
+    private static PluginConfiguration Config => Plugin.Instance!.Configuration;
 
     /// <summary>
     /// Gets a short message from an exception for API responses.
@@ -83,7 +83,7 @@ public class JellyTrailersController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<ActionResult<YtDlpCheckResult>> GetYtDlpCheck(CancellationToken cancellationToken)
     {
-        var runner = new YtDlpRunner(_config, _applicationPaths, _loggerFactory.CreateLogger<YtDlpRunner>(), _httpClientFactory);
+        var runner = new YtDlpRunner(Config, _applicationPaths, _loggerFactory.CreateLogger<YtDlpRunner>(), _httpClientFactory);
         var (available, message) = await runner.CheckAvailableAsync(cancellationToken).ConfigureAwait(false);
         return Ok(new YtDlpCheckResult { Available = available, Message = message });
     }

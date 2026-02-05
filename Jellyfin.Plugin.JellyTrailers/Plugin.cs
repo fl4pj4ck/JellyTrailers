@@ -5,14 +5,18 @@ using MediaBrowser.Controller;
 using MediaBrowser.Controller.Plugins;
 using MediaBrowser.Model.Plugins;
 using MediaBrowser.Model.Serialization;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Jellyfin.Plugin.JellyTrailers;
 
 /// <summary>
 /// JellyTrailers plugin: download movie and TV trailers with yt-dlp.
 /// </summary>
-public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages, IPluginServiceRegistrator
+/// <remarks>
+/// Does not implement IPluginServiceRegistrator: some hosts (e.g. Emby.Server) use
+/// Activator.CreateInstance(pluginType) with no args to call RegisterServices, which fails
+/// because this plugin has no parameterless constructor. Config is resolved from Instance at runtime.
+/// </remarks>
+public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="Plugin"/> class.
@@ -26,20 +30,9 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages, IPluginServ
     }
 
     /// <summary>
-    /// Gets the plugin instance. Kept for legacy or places where DI is not available.
+    /// Gets the plugin instance. Used by tasks and API to resolve configuration at runtime (no DI registration).
     /// </summary>
     public static Plugin? Instance { get; private set; }
-
-    /// <inheritdoc />
-    public void RegisterServices(IServiceCollection serviceCollection, IServerApplicationHost applicationHost)
-    {
-        // Register via factory so resolution happens when the service is first requested (by then
-        // the host has constructed Plugin and Instance is set). This avoids "Unable to resolve
-        // service for type PluginConfiguration" when the host calls RegisterServices before
-        // instantiating the plugin.
-        serviceCollection.AddSingleton<Plugin>(_ => Instance ?? throw new InvalidOperationException("JellyTrailers.Plugin not initialized."));
-        serviceCollection.AddSingleton<PluginConfiguration>(_ => Instance?.Configuration ?? throw new InvalidOperationException("JellyTrailers.Plugin not initialized."));
-    }
 
     /// <inheritdoc />
     public override string Name => "JellyTrailers";
