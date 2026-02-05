@@ -58,14 +58,6 @@
             line-height: 1.5;
             margin-bottom: 1.5rem;
         }
-        .trailers-schedule-row {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            flex-wrap: wrap;
-            margin-bottom: 1rem;
-        }
-        .trailers-schedule-row .inputContainer { margin-bottom: 0; }
         .trailers-danger {
             border-color: rgba(239,68,68,0.3);
             background: rgba(239,68,68,0.06);
@@ -113,7 +105,7 @@
                         <h2 class="sectionTitle">JellyTrailers</h2>
                         <span id="JellyTrailersVersion" style="font-size: 0.875rem; font-weight: normal; color: rgba(255,255,255,0.55); align-self: center;"></span>
                     </div>
-                    <p class="trailers-intro" style="color: rgba(255,255,255,0.75); font-size: 0.9rem; line-height: 1.5; margin-bottom: 1.5rem;">Download movie and TV show trailers with yt-dlp and place them next to your media. Run the scheduled task &quot;Download Trailers&quot; manually in Dashboard → Scheduled Tasks, or set a schedule below.</p>
+                    <p class="trailers-intro" style="color: rgba(255,255,255,0.75); font-size: 0.9rem; line-height: 1.5; margin-bottom: 1.5rem;">Download movie and TV show trailers with yt-dlp and place them next to your media. Run the scheduled task &quot;Download Trailers&quot; from Dashboard → Scheduled Tasks (set the schedule there).</p>
 
                     <div id="JellyTrailersYtDlpAlert" class="trailers-ytdlp-alert hidden" role="alert" style="display: none; background: #7f1d1d; border: 2px solid #dc2626; border-radius: 6px; padding: 1rem 1.25rem; margin-bottom: 1.25rem; color: #fecaca; font-size: 0.9rem; line-height: 1.45; flex-direction: row; align-items: flex-start; gap: 0.75rem; box-sizing: border-box;">
                         <span aria-hidden="true" style="color: #fca5a5; font-size: 1.25rem; flex-shrink: 0; line-height: 1;">⚠</span>
@@ -151,27 +143,6 @@
                             <input id="ExcludeLibraryNames" name="ExcludeLibraryNames" type="text" is="emby-input" placeholder="(none)" />
                             <div class="fieldDescription">Comma-separated library names to exclude from trailer download and remove-all.</div>
                         </div>
-                    </div>
-
-                    <div class="trailers-card" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 1.25rem; margin-bottom: 1.5rem;">
-                        <h3 style="margin: 0 0 1rem 0; font-size: 1rem; font-weight: 600; color: rgba(255,255,255,0.9);">Schedule</h3>
-                        <div class="checkboxContainer checkboxContainer-withDescription" style="margin-bottom: 1rem;">
-                            <label class="emby-checkbox-label">
-                                <input id="ScheduleEnabled" name="ScheduleEnabled" type="checkbox" is="emby-checkbox" />
-                                <span>Run Download Trailers on a schedule</span>
-                            </label>
-                        </div>
-                        <div class="trailers-schedule-row">
-                            <div class="inputContainer" id="ScheduleTimeContainer">
-                                <label class="inputLabel inputLabelUnfocused" for="ScheduleTime">Daily at</label>
-                                <input id="ScheduleTime" name="ScheduleTime" type="time" is="emby-input" value="02:00" />
-                            </div>
-                            <button type="button" id="BtnUpdateSchedule" is="emby-button" class="raised button-submit emby-button">
-                                <span>Update schedule</span>
-                            </button>
-                        </div>
-                        <div class="fieldDescription" style="margin-top: 0.25rem;">Time of day (server time) to run the download task. Ignored if schedule is disabled.</div>
-                        <div id="ScheduleStatus" class="fieldDescription" style="margin-top: 0.5em;"></div>
                     </div>
 
                     <div class="trailers-card" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 1.25rem; margin-bottom: 1.5rem;">
@@ -256,12 +227,13 @@
                     } catch (e) { return iso; }
                 }
 
-                function renderStats(stats) {
+                function renderStats(stats, scheduleInfo) {
                     var el = document.querySelector('#JellyTrailersStatsContent');
                     var hasFolderStats = stats && (stats.totalFolders || 0) > 0;
                     var hasRunStats = stats && (stats.totalDownloaded > 0 || stats.totalFailed > 0 || stats.lastRunDate);
                     if (!stats || (!hasFolderStats && !hasRunStats)) {
-                        el.innerHTML = '<p style="color: rgba(255,255,255,0.5); margin: 0;">No stats yet. Run the &quot;Download Trailers&quot; task once (Dashboard → Scheduled Tasks) to see folder and download stats.</p>';
+                        var scheduleLine = scheduleInfo ? '<p style="margin: 0.75rem 0 0 0; font-size: 0.875rem; color: rgba(255,255,255,0.7);">' + scheduleInfo + '</p>' : '';
+                        el.innerHTML = '<p style="color: rgba(255,255,255,0.5); margin: 0;">No stats yet. Run the &quot;Download Trailers&quot; task once (Dashboard → Scheduled Tasks) to see folder and download stats.</p>' + scheduleLine;
                         return;
                     }
                     var totalD = stats.totalDownloaded || 0;
@@ -295,19 +267,46 @@
                         '<div style="' + boxStyle + '"><div style="' + labelStyle + '">Failed (total)</div><div style="' + valueWarn + '">' + totalF + '</div></div>' +
                         '<div style="' + boxStyle + '"><div style="' + labelStyle + '">Task runs</div><div style="' + valueMuted + '">' + runs + '</div></div>' +
                         '</div>';
+                    var footerParts = [];
+                    if (scheduleInfo) {
+                        footerParts.push('<span style="margin-right: 1rem;">Schedule: ' + scheduleInfo + '</span>');
+                    }
                     if (stats.lastRunDate) {
+                        footerParts.push('<span>Last run: ' + formatDate(stats.lastRunDate) + ' — <strong>' + (stats.lastRunDownloaded || 0) + '</strong> downloaded, <strong>' + (stats.lastRunFailed || 0) + '</strong> failed</span>');
+                    }
+                    if (footerParts.length > 0) {
                         var ytDlpVer = (typeof lastYtDlpVersion !== 'undefined' && lastYtDlpVersion) ? ('yt-dlp: ' + lastYtDlpVersion) : '';
-                        html += '<div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.08); font-size: 0.875rem; color: rgba(255,255,255,0.7); display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap;">' +
-                            '<span>Last run: ' + formatDate(stats.lastRunDate) + ' — <strong>' + (stats.lastRunDownloaded || 0) + '</strong> downloaded, <strong>' + (stats.lastRunFailed || 0) + '</strong> failed</span>' +
+                        html += '<div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.08); font-size: 0.875rem; color: rgba(255,255,255,0.7); display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap;">' +
+                            '<div style="display: flex; flex-direction: column; gap: 0.25rem;">' + footerParts.join('') + '</div>' +
                             '<span id="JellyTrailersStatsYtDlpVersion" style="flex-shrink: 0;">' + (ytDlpVer || '') + '</span></div>';
                     }
                     el.innerHTML = html;
                 }
 
+                function getScheduleInfo(task) {
+                    if (!task) return null;
+                    var raw = task.Triggers || task.TriggerInfo;
+                    var triggers = Array.isArray(raw) ? raw : (raw != null ? [raw] : []);
+                    var triggerWithTime = triggers.find(function(t) { return t != null && (t.TimeOfDayTicks != null || t.TimeOfDayTicks === 0); });
+                    if (!triggerWithTime) return 'Not set (run manually from Dashboard → Scheduled Tasks)';
+                    var ticks = triggerWithTime.TimeOfDayTicks;
+                    var sec = Math.floor(Number(ticks) / 1e7);
+                    var h = Math.floor(sec / 3600) % 24;
+                    var m = Math.floor((sec % 3600) / 60);
+                    var timeStr = (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m;
+                    return 'Daily at ' + timeStr + ' (server time)';
+                }
+
                 function refreshStats() {
                     var url = ApiClient.getUrl('Plugins/JellyTrailers/Stats') + '?t=' + Date.now();
-                    ApiClient.getJSON(url).then(function(stats) {
-                        renderStats(stats);
+                    var statsPromise = ApiClient.getJSON(url);
+                    var tasksPromise = ApiClient.getJSON(ApiClient.getUrl('ScheduledTasks')).catch(function() { return []; });
+                    Promise.all([statsPromise, tasksPromise]).then(function(results) {
+                        var stats = results[0];
+                        var tasks = results[1] || [];
+                        var task = tasks.find(function(t) { return t.Key === 'JellyTrailersDownload'; });
+                        var scheduleInfo = getScheduleInfo(task);
+                        renderStats(stats, scheduleInfo);
                     }).catch(function() {
                         document.querySelector('#JellyTrailersStatsContent').textContent = 'Stats unavailable.';
                     });
@@ -385,27 +384,6 @@
                     refreshStats();
                     if (statsPollInterval) clearInterval(statsPollInterval);
                     statsPollInterval = setInterval(refreshStats, 10000);
-                    ApiClient.getJSON(ApiClient.getUrl('ScheduledTasks')).then(function(tasks) {
-                        var task = tasks.find(function(t) { return t.Key === 'JellyTrailersDownload'; });
-                        // Server may return Triggers (10.11+) or TriggerInfo (10.10); either may be array or single object
-                        var raw = task && (task.Triggers || task.TriggerInfo);
-                        var triggers = Array.isArray(raw) ? raw : (raw != null ? [raw] : []);
-                        var triggerWithTime = triggers.find(function(t) { return t != null && (t.TimeOfDayTicks != null || t.TimeOfDayTicks === 0); });
-                        if (task && triggerWithTime) {
-                            document.querySelector('#ScheduleEnabled').checked = true;
-                            var ticks = triggerWithTime.TimeOfDayTicks;
-                            var sec = Math.floor(Number(ticks) / 1e7);
-                            var h = Math.floor(sec / 3600) % 24;
-                            var m = Math.floor((sec % 3600) / 60);
-                            document.querySelector('#ScheduleTime').value = (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m;
-                        } else {
-                            document.querySelector('#ScheduleEnabled').checked = false;
-                            document.querySelector('#ScheduleTime').value = '02:00';
-                        }
-                    }).catch(function() {
-                        document.querySelector('#ScheduleEnabled').checked = false;
-                        document.querySelector('#ScheduleTime').value = '02:00';
-                    });
                 });
 
                 page.addEventListener('pagehide', function() {
@@ -435,42 +413,6 @@
                         });
                     });
                     return false;
-                });
-
-                document.querySelector('#BtnUpdateSchedule').addEventListener('click', function() {
-                    var statusEl = document.querySelector('#ScheduleStatus');
-                    statusEl.textContent = 'Updating…';
-                    ApiClient.getJSON(ApiClient.getUrl('ScheduledTasks')).then(function(tasks) {
-                        var task = tasks.find(function(t) { return t.Key === 'JellyTrailersDownload'; });
-                        if (!task) {
-                            statusEl.textContent = 'JellyTrailers download task not found.';
-                            return;
-                        }
-                        var enabled = document.querySelector('#ScheduleEnabled').checked;
-                        var triggers = [];
-                        if (enabled) {
-                            var timeStr = document.querySelector('#ScheduleTime').value || '02:00';
-                            var parts = timeStr.split(':');
-                            var h = parseInt(parts[0], 10) || 0;
-                            var m = parseInt(parts[1], 10) || 0;
-                            var sec = (h * 3600 + m * 60) % 86400;
-                            var timeOfDayTicks = sec * 1e7;
-                            // API expects TaskTriggerInfo[]; Type as string works for 10.11+, numeric 2 for 10.10 Daily
-                            triggers = [{ Type: 'DailyTrigger', TimeOfDayTicks: timeOfDayTicks }];
-                        }
-                        return ApiClient.ajax({
-                            type: 'POST',
-                            url: ApiClient.getUrl('ScheduledTasks/' + task.Id),
-                            data: JSON.stringify(triggers),
-                            contentType: 'application/json'
-                        }).then(function() {
-                            statusEl.textContent = 'Schedule updated.';
-                        }).catch(function(err) {
-                            statusEl.textContent = 'Failed to update schedule: ' + (err.message || err);
-                        });
-                    }).catch(function(err) {
-                        statusEl.textContent = 'Failed to load tasks: ' + (err.message || err);
-                    });
                 });
 
                 document.querySelector('#BtnResetStats').addEventListener('click', function() {
