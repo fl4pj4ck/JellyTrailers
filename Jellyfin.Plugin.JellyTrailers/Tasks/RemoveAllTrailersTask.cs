@@ -11,24 +11,31 @@ namespace Jellyfin.Plugin.JellyTrailers.Tasks;
 
 /// <summary>
 /// Scheduled task: delete all trailer files from movie and TV library folders (manual run only).
+/// When running on Jellyfin, config and scanner are injected via DI; otherwise resolved from Plugin.Instance and new (Emby compatibility).
 /// </summary>
 public class RemoveAllTrailersTask : IScheduledTask
 {
     private readonly ILibraryManager _libraryManager;
     private readonly ILogger<RemoveAllTrailersTask> _logger;
     private readonly ILoggerFactory _loggerFactory;
+    private readonly PluginConfiguration? _config;
+    private readonly ILibraryScanner? _scanner;
 
     public RemoveAllTrailersTask(
         ILibraryManager libraryManager,
         ILogger<RemoveAllTrailersTask> logger,
-        ILoggerFactory loggerFactory)
+        ILoggerFactory loggerFactory,
+        PluginConfiguration? config = null,
+        ILibraryScanner? scanner = null)
     {
         _libraryManager = libraryManager;
         _logger = logger;
         _loggerFactory = loggerFactory;
+        _config = config;
+        _scanner = scanner;
     }
 
-    private static PluginConfiguration Config => Plugin.Instance!.Configuration;
+    private PluginConfiguration Config => _config ?? Plugin.Instance!.Configuration;
 
     /// <inheritdoc />
     public string Name => "Remove All Trailers (JellyTrailers)";
@@ -46,7 +53,7 @@ public class RemoveAllTrailersTask : IScheduledTask
     public Task ExecuteAsync(IProgress<double> progress, CancellationToken cancellationToken)
     {
         var trailerPath = Config.GetEffectiveTrailerPath();
-        var scanner = new LibraryScanner(_libraryManager, _loggerFactory.CreateLogger<LibraryScanner>());
+        var scanner = _scanner ?? new LibraryScanner(_libraryManager, _loggerFactory.CreateLogger<LibraryScanner>());
 
         var includeNames = Config.GetIncludeLibraryNamesSet();
         var excludeNames = Config.GetExcludeLibraryNamesSet();

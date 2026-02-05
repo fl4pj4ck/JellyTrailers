@@ -16,6 +16,7 @@ namespace Jellyfin.Plugin.JellyTrailers.Api;
 /// <summary>
 /// API controller for JellyTrailers plugin (stats and yt-dlp check).
 /// Endpoints require authentication; intended for use from the Dashboard config page (admin).
+/// When running on Jellyfin, config and services are injected via DI; otherwise resolved from Plugin.Instance and new (Emby compatibility).
 /// </summary>
 [Route("Plugins/JellyTrailers")]
 [ApiController]
@@ -26,24 +27,32 @@ public class JellyTrailersController : ControllerBase
     private readonly ILogger<JellyTrailersController> _logger;
     private readonly ILoggerFactory _loggerFactory;
     private readonly IHttpClientFactory _httpClientFactory;
+    private readonly PluginConfiguration? _config;
+    private readonly IYtDlpRunner? _ytDlpRunner;
+    private readonly ITrailerStatsStore? _statsStore;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="JellyTrailersController"/> class.
-    /// Config and services are resolved from Plugin.Instance when not registered in DI (e.g. Emby); when registered (Jellyfin) inject them for testability.
     /// </summary>
     public JellyTrailersController(
         IApplicationPaths applicationPaths,
         ILogger<JellyTrailersController> logger,
         ILoggerFactory loggerFactory,
-        IHttpClientFactory httpClientFactory)
+        IHttpClientFactory httpClientFactory,
+        PluginConfiguration? config = null,
+        IYtDlpRunner? ytDlpRunner = null,
+        ITrailerStatsStore? statsStore = null)
     {
         _applicationPaths = applicationPaths;
         _logger = logger;
         _loggerFactory = loggerFactory;
         _httpClientFactory = httpClientFactory;
+        _config = config;
+        _ytDlpRunner = ytDlpRunner;
+        _statsStore = statsStore;
     }
 
-    private PluginConfiguration Config => Plugin.Instance!.Configuration;
+    private PluginConfiguration Config => _config ?? Plugin.Instance!.Configuration;
 
     /// <summary>
     /// Gets a short message from an exception for API responses.
@@ -103,7 +112,7 @@ public class JellyTrailersController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<ActionResult<YtDlpCheckResult>> GetYtDlpCheck(CancellationToken cancellationToken)
     {
-        var runner = new YtDlpRunner(Config, _applicationPaths, _loggerFactory.CreateLogger<YtDlpRunner>(), _httpClientFactory);
+        var runner = _ytDlpRunner ?? new YtDlpRunner(Config, _applicationPaths, _loggerFactory.CreateLogger<YtDlpRunner>(), _httpClientFactory);
         var (available, message) = await runner.CheckAvailableAsync(cancellationToken).ConfigureAwait(false);
         return Ok(new YtDlpCheckResult { Available = available, Message = message });
     }
@@ -136,7 +145,7 @@ public class JellyTrailersController : ControllerBase
     {
         try
         {
-            var store = new TrailerStatsStore(_applicationPaths, _loggerFactory.CreateLogger<TrailerStatsStore>());
+            var store = _statsStore ?? new TrailerStatsStore(_applicationPaths, _loggerFactory.CreateLogger<TrailerStatsStore>());
             var stats = store.GetStats();
             return Ok(stats);
         }
@@ -164,7 +173,7 @@ public class JellyTrailersController : ControllerBase
     {
         try
         {
-            var store = new TrailerStatsStore(_applicationPaths, _loggerFactory.CreateLogger<TrailerStatsStore>());
+            var store = _statsStore ?? new TrailerStatsStore(_applicationPaths, _loggerFactory.CreateLogger<TrailerStatsStore>());
             store.Reset();
             return NoContent();
         }

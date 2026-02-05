@@ -17,6 +17,7 @@ namespace Jellyfin.Plugin.JellyTrailers.Tasks;
 
 /// <summary>
 /// Scheduled task: scan libraries, download missing trailers via yt-dlp, trigger library refresh. No persistent list; order by folder mtime (newest first).
+/// When running on Jellyfin, config and services are injected via DI; otherwise resolved from Plugin.Instance and new (Emby compatibility).
 /// </summary>
 public class TrailerDownloadTask : IScheduledTask
 {
@@ -25,22 +26,34 @@ public class TrailerDownloadTask : IScheduledTask
     private readonly ILoggerFactory _loggerFactory;
     private readonly IApplicationPaths _applicationPaths;
     private readonly IHttpClientFactory _httpClientFactory;
+    private readonly PluginConfiguration? _config;
+    private readonly IYtDlpRunner? _ytDlpRunner;
+    private readonly ITrailerStatsStore? _statsStore;
+    private readonly ILibraryScanner? _scanner;
 
     public TrailerDownloadTask(
         ILibraryManager libraryManager,
         ILogger<TrailerDownloadTask> logger,
         ILoggerFactory loggerFactory,
         IApplicationPaths applicationPaths,
-        IHttpClientFactory httpClientFactory)
+        IHttpClientFactory httpClientFactory,
+        PluginConfiguration? config = null,
+        IYtDlpRunner? ytDlpRunner = null,
+        ITrailerStatsStore? statsStore = null,
+        ILibraryScanner? scanner = null)
     {
         _libraryManager = libraryManager;
         _logger = logger;
         _loggerFactory = loggerFactory;
         _applicationPaths = applicationPaths;
         _httpClientFactory = httpClientFactory;
+        _config = config;
+        _ytDlpRunner = ytDlpRunner;
+        _statsStore = statsStore;
+        _scanner = scanner;
     }
 
-    private static PluginConfiguration Config => Plugin.Instance!.Configuration;
+    private PluginConfiguration Config => _config ?? Plugin.Instance!.Configuration;
 
     /// <inheritdoc />
     public string Name => "Download Trailers (JellyTrailers)";
@@ -57,9 +70,9 @@ public class TrailerDownloadTask : IScheduledTask
     /// <inheritdoc />
     public async Task ExecuteAsync(IProgress<double> progress, CancellationToken cancellationToken)
     {
-        var scanner = new LibraryScanner(_libraryManager, _loggerFactory.CreateLogger<LibraryScanner>());
-        var statsStore = new TrailerStatsStore(_applicationPaths, _loggerFactory.CreateLogger<TrailerStatsStore>());
-        var ytDlp = new YtDlpRunner(Config, _applicationPaths, _loggerFactory.CreateLogger<YtDlpRunner>(), _httpClientFactory);
+        var scanner = _scanner ?? new LibraryScanner(_libraryManager, _loggerFactory.CreateLogger<LibraryScanner>());
+        var statsStore = _statsStore ?? new TrailerStatsStore(_applicationPaths, _loggerFactory.CreateLogger<TrailerStatsStore>());
+        var ytDlp = _ytDlpRunner ?? new YtDlpRunner(Config, _applicationPaths, _loggerFactory.CreateLogger<YtDlpRunner>(), _httpClientFactory);
 
         // 1. Get library roots and scan filesystem (no persistent list; order by folder mtime so newer items first)
         var includeNames = Config.GetIncludeLibraryNamesSet();

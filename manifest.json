@@ -9,6 +9,54 @@
     "imageUrl": "https://raw.githubusercontent.com/fl4pj4ck/JellyTrailers/main/assets/icon.png",
     "versions": [
       {
+        "version": "1.6.0.0",
+        "changelog": "1.6.0: DI refactor — controller and tasks inject PluginConfiguration, IYtDlpRunner, ITrailerStatsStore, ILibraryScanner when registered (Jellyfin); fallback to Plugin.Instance and new for Emby. Manifest pretty-printed.",
+        "targetAbi": "10.12.0.0",
+        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.6.0/JellyTrailers_1.6.0.0_10.12.zip",
+        "checksum": "1c130d44b2c5e815a58f14502371e9a7",
+        "timestamp": "2025-02-05T00:00:00Z"
+      },
+      {
+        "version": "1.6.0.0",
+        "changelog": "1.6.0: DI refactor — controller and tasks inject PluginConfiguration, IYtDlpRunner, ITrailerStatsStore, ILibraryScanner when registered (Jellyfin); fallback to Plugin.Instance and new for Emby. Manifest pretty-printed.",
+        "targetAbi": "10.11.0.0",
+        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.6.0/JellyTrailers_1.6.0.0_10.12.zip",
+        "checksum": "1c130d44b2c5e815a58f14502371e9a7",
+        "timestamp": "2025-02-05T00:00:00Z"
+      },
+      {
+        "version": "1.6.0.0",
+        "changelog": "1.6.0: DI refactor — controller and tasks inject PluginConfiguration, IYtDlpRunner, ITrailerStatsStore, ILibraryScanner when registered (Jellyfin); fallback to Plugin.Instance and new for Emby. Manifest pretty-printed.",
+        "targetAbi": "10.10.0.0",
+        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.6.0/JellyTrailers_1.6.0.0.zip",
+        "checksum": "d5a8adc091f64363d00e41b2d29d0708",
+        "timestamp": "2025-02-05T00:00:00Z"
+      },
+      {
+        "version": "1.5.6.0",
+        "changelog": "1.5.6: First-run notices fixed: TrailerPathCorrected cleared when path invalid on load; only show when user saved non-empty invalid path; stats WasCorrupted cleared after first return.",
+        "targetAbi": "10.12.0.0",
+        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.5.6/JellyTrailers_1.5.6.0_10.12.zip",
+        "checksum": "",
+        "timestamp": "2025-02-05T00:00:00Z"
+      },
+      {
+        "version": "1.5.6.0",
+        "changelog": "1.5.6: First-run notices fixed: TrailerPathCorrected cleared when path invalid on load; only show when user saved non-empty invalid path; stats WasCorrupted cleared after first return.",
+        "targetAbi": "10.11.0.0",
+        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.5.6/JellyTrailers_1.5.6.0_10.12.zip",
+        "checksum": "",
+        "timestamp": "2025-02-05T00:00:00Z"
+      },
+      {
+        "version": "1.5.6.0",
+        "changelog": "1.5.6: First-run notices fixed: TrailerPathCorrected cleared when path invalid on load; only show when user saved non-empty invalid path; stats WasCorrupted cleared after first return.",
+        "targetAbi": "10.10.0.0",
+        "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.5.6/JellyTrailers_1.5.6.0.zip",
+        "checksum": "",
+        "timestamp": "2025-02-05T00:00:00Z"
+      },
+      {
         "version": "1.5.5.0",
         "changelog": "1.5.5: First-run notices: read config with camelCase so normalization runs (fix notices still showing).",
         "targetAbi": "10.12.0.0",

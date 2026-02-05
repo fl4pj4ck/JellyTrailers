@@ -12,6 +12,7 @@ public class PluginConfiguration : BasePluginConfiguration
 {
     private string _trailerPath = "trailer.mp4";
     private string _ytDlpOptionsJson = "{}";
+    private bool _trailerPathCorrected;
 
     /// <summary>
     /// Comma-separated library names to include (empty = all movie/TV libraries).
@@ -36,7 +37,13 @@ public class PluginConfiguration : BasePluginConfiguration
     public string TrailerPath
     {
         get => GetEffectiveTrailerPathInternal(_trailerPath);
-        set => _trailerPath = value ?? string.Empty;
+        set
+        {
+            var v = value ?? string.Empty;
+            _trailerPath = v;
+            if (IsPathInvalid(v))
+                _trailerPathCorrected = false;
+        }
     }
 
     /// <summary>
@@ -78,9 +85,20 @@ public class PluginConfiguration : BasePluginConfiguration
 
     /// <summary>
     /// Set to true when TrailerPath was corrected (e.g. contained ".." or was absolute). Config page shows a one-time notice and clears this on next save.
-    /// Only meaningful when the user actually saved an invalid path; we never expose a "corrected" state for bad data from disk.
+    /// Cleared when we normalize path on load so first run / bad disk never shows the notice.
     /// </summary>
-    public bool TrailerPathCorrected { get; set; }
+    public bool TrailerPathCorrected
+    {
+        get => _trailerPathCorrected && IsPathInvalid(_trailerPath) && !string.IsNullOrWhiteSpace(_trailerPath);
+        set => _trailerPathCorrected = value;
+    }
+
+    private static bool IsPathInvalid(string? path)
+    {
+        var p = string.IsNullOrWhiteSpace(path) ? null : path.Trim();
+        if (string.IsNullOrEmpty(p)) return true;
+        return p.Contains("..", StringComparison.Ordinal) || Path.IsPathRooted(p);
+    }
 
     private static string GetEffectiveTrailerPathInternal(string path)
     {
