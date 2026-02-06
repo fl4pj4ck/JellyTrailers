@@ -27,6 +27,19 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
         : base(applicationPaths, xmlSerializer)
     {
         Instance = this;
+        EnsureConfigurationValid();
+    }
+
+    /// <summary>
+    /// Ensures configuration backing fields are valid after load so first open of settings never shows correction notices.
+    /// Normalization also happens in config getters; this runs once at plugin load so any persisted invalid state is fixed in memory immediately.
+    /// </summary>
+    private void EnsureConfigurationValid()
+    {
+        var c = Configuration;
+        _ = c.TrailerPath;
+        _ = c.YtDlpOptionsJson;
+        _ = c.TrailerPathCorrected;
     }
 
     /// <summary>

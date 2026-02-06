@@ -16,6 +16,9 @@ public class TrailerStatsStore : ITrailerStatsStore
 {
     private readonly string _dataDir;
     private readonly ILogger _logger;
+    /// <summary>Set when LoadData recovered from a corrupt file; reported once from GetStats then cleared. Never persisted to disk.</summary>
+    private bool _lastLoadWasCorrupted;
+
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         WriteIndented = false,
@@ -152,8 +155,9 @@ public class TrailerStatsStore : ITrailerStatsStore
                 ? data.TotalDownloaded
                 : Math.Max(data.TotalDownloaded, data.FoldersWithTrailer);
 
-            var wasCorrupted = data.WasCorrupted;
-            if (wasCorrupted)
+            var wasCorrupted = _lastLoadWasCorrupted || data.WasCorrupted;
+            _lastLoadWasCorrupted = false;
+            if (data.WasCorrupted)
             {
                 data.WasCorrupted = false;
                 SaveData(data);
@@ -196,7 +200,8 @@ public class TrailerStatsStore : ITrailerStatsStore
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Failed to load stats from {Path}; resetting stats file.", path);
-            var resetData = new StatsData { WasCorrupted = true };
+            _lastLoadWasCorrupted = true;
+            var resetData = new StatsData(); // never persist WasCorrupted so first run / fresh install never shows notice
             SaveData(resetData);
             return resetData;
         }

@@ -82,18 +82,7 @@ public class JellyTrailersController : ControllerBase
     {
         var version = typeof(Plugin).Assembly.GetName().Version;
         var versionString = version != null ? version.ToString() : "0.0.0";
-        var ytDlpOptionsJsonInvalid = false;
-        if (!string.IsNullOrWhiteSpace(Config.YtDlpOptionsJson))
-        {
-            try
-            {
-                JsonSerializer.Deserialize<JsonElement>(Config.YtDlpOptionsJson);
-            }
-            catch (JsonException)
-            {
-                ytDlpOptionsJsonInvalid = true;
-            }
-        }
+        var ytDlpOptionsJsonInvalid = Config.YtDlpOptionsJsonWasInvalid;
 
         return Ok(new PluginVersionResult
         {

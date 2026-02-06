@@ -32,11 +32,19 @@ public class PluginConfiguration : BasePluginConfiguration
 
     /// <summary>
     /// Trailer file path relative to each media folder (e.g. "trailer.mp4" or "Trailer/trailer.mp4").
-    /// Getter never returns invalid paths (empty, "..", or absolute); returns "trailer.mp4" instead so first run never shows a correction notice.
+    /// Getter normalizes invalid/empty stored value to "trailer.mp4" and clears TrailerPathCorrected so first run and bad disk never show a notice.
     /// </summary>
     public string TrailerPath
     {
-        get => GetEffectiveTrailerPathInternal(_trailerPath);
+        get
+        {
+            if (IsPathInvalid(_trailerPath) || string.IsNullOrWhiteSpace(_trailerPath))
+            {
+                _trailerPath = "trailer.mp4";
+                _trailerPathCorrected = false;
+            }
+            return GetEffectiveTrailerPathInternal(_trailerPath);
+        }
         set
         {
             var v = value ?? string.Empty;
@@ -69,13 +77,26 @@ public class PluginConfiguration : BasePluginConfiguration
     /// <summary>
     /// Optional extra yt-dlp options as JSON. Only allowlisted option names are applied (e.g. user-agent, proxy, format);
     /// execution-related options (exec, postprocessor-args, etc.) are ignored for security.
-    /// Getter never returns invalid JSON; returns "{}" if stored value does not parse, so first run never shows an invalid-JSON notice.
+    /// Getter normalizes invalid/empty stored value to "{}" so first run and bad disk never show an invalid-JSON notice.
     /// </summary>
     public string YtDlpOptionsJson
     {
-        get => TryParseJson(_ytDlpOptionsJson) ? _ytDlpOptionsJson : "{}";
+        get
+        {
+            if (!TryParseJson(_ytDlpOptionsJson))
+            {
+                _ytDlpOptionsJson = "{}";
+                return "{}";
+            }
+            return _ytDlpOptionsJson;
+        }
         set => _ytDlpOptionsJson = TryParseJson(value) ? (value ?? "{}").Trim() : "{}";
     }
+
+    /// <summary>
+    /// True when the stored YtDlpOptionsJson was non-empty and invalid. Always false after first read because getter normalizes.
+    /// </summary>
+    public bool YtDlpOptionsJsonWasInvalid => false;
 
     /// <summary>
     /// When true, if download from YouTube (yt-dlp search) fails, try to download using the first trailer URL
@@ -84,12 +105,19 @@ public class PluginConfiguration : BasePluginConfiguration
     public bool UseTmdbOmdbFallback { get; set; } = true;
 
     /// <summary>
-    /// Set to true when TrailerPath was corrected (e.g. contained ".." or was absolute). Config page shows a one-time notice and clears this on next save.
-    /// Cleared when we normalize path on load so first run / bad disk never shows the notice.
+    /// Set to true when TrailerPath was corrected (e.g. contained ".." or was absolute). Getter returns false when path is valid or empty (TrailerPath getter normalizes first).
     /// </summary>
     public bool TrailerPathCorrected
     {
-        get => _trailerPathCorrected && IsPathInvalid(_trailerPath) && !string.IsNullOrWhiteSpace(_trailerPath);
+        get
+        {
+            if (!IsPathInvalid(_trailerPath) || string.IsNullOrWhiteSpace(_trailerPath))
+            {
+                _trailerPathCorrected = false;
+                return false;
+            }
+            return _trailerPathCorrected;
+        }
         set => _trailerPathCorrected = value;
     }
 

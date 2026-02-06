@@ -13,7 +13,7 @@
         "changelog": "1.6.0: DI refactor — controller and tasks inject PluginConfiguration, IYtDlpRunner, ITrailerStatsStore, ILibraryScanner when registered (Jellyfin); fallback to Plugin.Instance and new for Emby. Manifest pretty-printed.",
         "targetAbi": "10.12.0.0",
         "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.6.0/JellyTrailers_1.6.0.0_10.12.zip",
-        "checksum": "1c130d44b2c5e815a58f14502371e9a7",
+        "checksum": "a37456740e67dd740eceb8451ce97e20",
         "timestamp": "2025-02-05T00:00:00Z"
       },
       {
@@ -21,7 +21,7 @@
         "changelog": "1.6.0: DI refactor — controller and tasks inject PluginConfiguration, IYtDlpRunner, ITrailerStatsStore, ILibraryScanner when registered (Jellyfin); fallback to Plugin.Instance and new for Emby. Manifest pretty-printed.",
         "targetAbi": "10.11.0.0",
         "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.6.0/JellyTrailers_1.6.0.0_10.12.zip",
-        "checksum": "1c130d44b2c5e815a58f14502371e9a7",
+        "checksum": "a37456740e67dd740eceb8451ce97e20",
         "timestamp": "2025-02-05T00:00:00Z"
       },
       {
@@ -29,7 +29,7 @@
         "changelog": "1.6.0: DI refactor — controller and tasks inject PluginConfiguration, IYtDlpRunner, ITrailerStatsStore, ILibraryScanner when registered (Jellyfin); fallback to Plugin.Instance and new for Emby. Manifest pretty-printed.",
         "targetAbi": "10.10.0.0",
         "sourceUrl": "https://github.com/fl4pj4ck/JellyTrailers/releases/download/v1.6.0/JellyTrailers_1.6.0.0.zip",
-        "checksum": "d5a8adc091f64363d00e41b2d29d0708",
+        "checksum": "71eef324827be243103f8d7995198c29",
         "timestamp": "2025-02-05T00:00:00Z"
       },
       {
